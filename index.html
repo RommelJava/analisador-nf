@@ -12,14 +12,14 @@ header{background:#13131a;border-bottom:1px solid #2a2a3a;padding:12px 20px;disp
 .tabs{display:flex;background:#13131a;border-bottom:1px solid #2a2a3a;padding:0 20px;}
 .tab{padding:10px 18px;font-size:12px;cursor:pointer;color:#6b6b85;border-bottom:2px solid transparent;}
 .tab.on{color:#00e5a0;border-bottom-color:#00e5a0;}
-.pane{display:none;flex:1;flex-direction:column;min-height:0;}
+.pane{display:none;flex:1;flex-direction:column;}
 .pane.on{display:flex;}
 #dropZone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px;border:2px dashed #2a2a3a;margin:20px;border-radius:12px;cursor:pointer;}
-#dropZone:hover,#dropZone.over{border-color:#00e5a0;background:#0d1a14;}
+#dropZone:hover{border-color:#00e5a0;background:#0d1a14;}
 #dropZone h2{font-size:18px;font-weight:700;}
 #dropZone p{font-size:13px;color:#6b6b85;text-align:center;line-height:1.6;}
 .btn-verde{padding:10px 28px;background:#00e5a0;color:#000;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:13px;}
-#filaDiv{display:none;flex-direction:column;flex:1;min-height:0;}
+#filaDiv{display:none;flex-direction:column;flex:1;}
 #filaHeader{padding:14px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #2a2a3a;}
 #filaHeader h3{font-size:13px;font-weight:700;}
 .btn-sm{padding:5px 12px;background:transparent;border:1px solid #2a2a3a;border-radius:5px;color:#6b6b85;font-size:11px;cursor:pointer;}
@@ -31,12 +31,13 @@ header{background:#13131a;border-bottom:1px solid #2a2a3a;padding:12px 20px;disp
 .ni-info{flex:1;min-width:0;}
 .ni-nome{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ni-st{font-size:10px;color:#6b6b85;margin-top:2px;}
-.ni-rm{background:transparent;border:none;color:#6b6b85;cursor:pointer;font-size:16px;}
+.ni-rm{background:transparent;border:none;color:#6b6b85;cursor:pointer;font-size:16px;padding:4px;}
+.ni-rm:hover{color:#ff6b35;}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 7px;border-radius:10px;}
-.w{background:#1c1c26;color:#6b6b85;border:1px solid #2a2a3a;}
-.p{background:rgba(0,229,160,.1);color:#00e5a0;border:1px solid rgba(0,229,160,.3);}
-.ok{background:rgba(0,229,160,.12);color:#00e5a0;}
-.er{background:rgba(255,107,53,.1);color:#ff6b35;}
+.bw{background:#1c1c26;color:#6b6b85;border:1px solid #2a2a3a;}
+.bp{background:rgba(0,229,160,.1);color:#00e5a0;border:1px solid rgba(0,229,160,.3);}
+.bok{background:rgba(0,229,160,.12);color:#00e5a0;}
+.ber{background:rgba(255,107,53,.1);color:#ff6b35;}
 .ss{width:10px;height:10px;border:1.5px solid rgba(0,229,160,.3);border-top-color:#00e5a0;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
 @keyframes spin{to{transform:rotate(360deg)}}
 #progWrap{display:none;padding:0 20px 12px;}
@@ -59,7 +60,7 @@ tr:hover td{background:#13131a;}
 .tm:hover{border-color:#00e5a0;}
 .vok{color:#00e5a0;font-family:monospace;font-weight:600;}
 .vno{color:#6b6b85;font-style:italic;}
-.tb{font-size:9px;padding:2px 7px;border-radius:10px;background:#1c1c26;border:1px solid #2a2a3a;color:#6b6b85;}
+.tb2{font-size:9px;padding:2px 7px;border-radius:10px;background:#1c1c26;border:1px solid #2a2a3a;color:#6b6b85;}
 .btn-dl{padding:4px 9px;background:transparent;border:1px solid #2a2a3a;border-radius:5px;color:#6b6b85;font-size:12px;cursor:pointer;}
 .btn-dl:hover{border-color:#00e5a0;color:#00e5a0;}
 #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:20px;}
@@ -84,7 +85,7 @@ tr:hover td{background:#13131a;}
 <header>
   <div class="logo">NF</div>
   <h1 style="font-size:15px;">Analisador de Nota Fiscal</h1>
-  <span class="tag">Múltiplas Notas · Vision API + Claude</span>
+  <span class="tag">Múltiplas Notas · Vision + Claude</span>
 </header>
 <div class="tabs">
   <div class="tab on" id="tabUp" onclick="aba(0)">&#x1F4C2; Upload</div>
@@ -101,9 +102,12 @@ tr:hover td{background:#13131a;}
     <div id="filaHeader">
       <h3 id="filaCnt">0 notas</h3>
       <button class="btn-sm" id="btnAdd">+ Adicionar</button>
-      <button id="btnAnalisar" onclick="analisarTudo()">&#9654; Analisar todas</button>
+      <button id="btnAnalisar">&#9654; Analisar todas</button>
     </div>
-    <div id="progWrap"><div id="progOut"><div id="progBar"></div></div><div id="progTxt"></div></div>
+    <div id="progWrap">
+      <div id="progOut"><div id="progBar"></div></div>
+      <div id="progTxt"></div>
+    </div>
     <div id="listaNota"></div>
   </div>
 </div>
@@ -117,7 +121,10 @@ tr:hover td{background:#13131a;}
   <div id="resVazio">&#x1F4CB;<br>Nenhuma nota analisada ainda.</div>
   <div id="tabelaWrap" style="display:none;">
     <table>
-      <thead><tr><th style="width:50px">Img</th><th>Arquivo</th><th>Tipo</th><th>Data</th><th>Número</th><th>Valor</th><th>Status</th><th style="width:60px"></th></tr></thead>
+      <thead><tr>
+        <th style="width:50px">Img</th><th>Arquivo</th><th>Tipo</th>
+        <th>Data</th><th>Número</th><th>Valor</th><th>Status</th><th style="width:60px"></th>
+      </tr></thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>
@@ -146,393 +153,512 @@ var CK = ["sk-ant-api03-4r8g6O4dDF8Osk","7UTsz5CVwDgtY816v59K2qHGhZl","G0q9yDlAK
 var notas = [];
 var _editNota = null, _editIdx = null;
 
-// Elementos
-var fileInput = document.getElementById("fileInput");
-var dropZone = document.getElementById("dropZone");
-var filaDiv = document.getElementById("filaDiv");
-var listaNota = document.getElementById("listaNota");
-var filaCnt = document.getElementById("filaCnt");
-var btnAnalisar = document.getElementById("btnAnalisar");
-var progWrap = document.getElementById("progWrap");
-var progBar = document.getElementById("progBar");
-var progTxt = document.getElementById("progTxt");
-var tbody = document.getElementById("tbody");
-var tabelaWrap = document.getElementById("tabelaWrap");
-var resVazio = document.getElementById("resVazio");
-var resCnt = document.getElementById("resCnt");
+window.addEventListener("DOMContentLoaded", function() {
+  var fileInput = document.getElementById("fileInput");
+  var dropZone  = document.getElementById("dropZone");
+  var filaDiv   = document.getElementById("filaDiv");
+  var btnAnalisar = document.getElementById("btnAnalisar");
 
-// Botões
-document.getElementById("btnSel").addEventListener("click", function(e) {
-  e.stopPropagation();
-  fileInput.click();
-});
-document.getElementById("btnAdd").addEventListener("click", function(e) {
-  e.stopPropagation();
-  fileInput.click();
-});
-fileInput.addEventListener("change", function(e) {
-  if (e.target.files && e.target.files.length > 0) {
-    addFiles(e.target.files);
-  }
-  fileInput.value = "";
-});
-dropZone.addEventListener("dragover", function(e) { e.preventDefault(); dropZone.classList.add("over"); });
-dropZone.addEventListener("dragleave", function() { dropZone.classList.remove("over"); });
-dropZone.addEventListener("drop", function(e) { e.preventDefault(); dropZone.classList.remove("over"); addFiles(e.dataTransfer.files); });
-
-function aba(n) {
-  document.getElementById("tabUp").classList.toggle("on", n===0);
-  document.getElementById("tabRes").classList.toggle("on", n===1);
-  document.getElementById("paneUp").classList.toggle("on", n===0);
-  document.getElementById("paneRes").classList.toggle("on", n===1);
-}
-
-function addFiles(files) {
-  var arr = Array.from(files).filter(function(f) { return f.type.startsWith("image/"); });
-  if (!arr.length) return;
-  var done = 0;
-  arr.forEach(function(f) {
-    var r = new FileReader();
-    r.onload = function(ev) {
-      notas.push({
-        id: Date.now() + Math.random(),
-        nome: f.name,
-        b64: ev.target.result.split(",")[1],
-        mime: f.type || "image/jpeg",
-        thumb: ev.target.result,
-        status: "wait",
-        res: null,
-        erro: null,
-        _thumb: null
-      });
-      done++;
-      if (done === arr.length) {
-        renderFila();
-        dropZone.style.display = "none";
-        filaDiv.style.display = "flex";
-      }
-    };
-    r.readAsDataURL(f);
+  document.getElementById("btnSel").addEventListener("click", function(e) {
+    e.stopPropagation(); fileInput.click();
   });
-}
-
-function renderFila() {
-  filaCnt.textContent = notas.length + (notas.length === 1 ? " nota" : " notas");
-  listaNota.innerHTML = "";
-  notas.forEach(function(n) {
-    var el = document.createElement("div");
-    el.className = "ni";
-    el.id = "ni-" + n.id;
-    el.innerHTML = '<img src="' + n.thumb + '"><div class="ni-info"><div class="ni-nome">' + n.nome + '</div><div class="ni-st" id="ns-' + n.id + '">' + badgeHTML(n) + '</div></div>';
-    var rmBtn = document.createElement("button");
-    rmBtn.className = "ni-rm";
-    rmBtn.innerHTML = "&#10005;";
-    (function(nid){ rmBtn.addEventListener("click", function(){ remover(nid); }); })(n.id);
-    el.appendChild(rmBtn);
-    listaNota.appendChild(el);
+  document.getElementById("btnAdd").addEventListener("click", function(e) {
+    e.stopPropagation(); fileInput.click();
   });
-  btnAnalisar.disabled = notas.length === 0;
-}
-
-function badgeHTML(n) {
-  if (n.status === "wait") return '<span class="badge w">aguardando</span>';
-  if (n.status === "proc") return '<span class="badge p"><span class="ss"></span> processando...</span>';
-  if (n.status === "ok") return '<span class="badge ok">&#10003; concluído</span>';
-  return '<span class="badge er">&#10005; erro</span>';
-}
-
-function remover(id) {
-  notas = notas.filter(function(n) { return n.id != id; });
-  if (!notas.length) { dropZone.style.display = "flex"; filaDiv.style.display = "none"; }
-  else renderFila();
-}
-
-function atualizarBadge(n) {
-  var el = document.getElementById("ns-" + n.id);
-  if (el) el.innerHTML = badgeHTML(n);
-}
-
-async function analisarTudo() {
+  fileInput.addEventListener("change", function() {
+    if (fileInput.files && fileInput.files.length) {
+      addFiles(fileInput.files);
+      fileInput.value = "";
+    }
+  });
+  dropZone.addEventListener("dragover",  function(e) { e.preventDefault(); dropZone.classList.add("over"); });
+  dropZone.addEventListener("dragleave", function()  { dropZone.classList.remove("over"); });
+  dropZone.addEventListener("drop", function(e) {
+    e.preventDefault(); dropZone.classList.remove("over");
+    addFiles(e.dataTransfer.files);
+  });
+  btnAnalisar.addEventListener("click", analisarTudo);
   btnAnalisar.disabled = true;
-  progWrap.style.display = "block";
-  notas.forEach(function(n) { n.status = "wait"; n.res = null; n.erro = null; n._thumb = null; });
-  for (var i = 0; i < notas.length; i++) {
-    var n = notas[i];
-    n.status = "proc"; atualizarBadge(n);
-    progBar.style.width = Math.round(i / notas.length * 100) + "%";
-    progTxt.textContent = "Processando " + (i+1) + " de " + notas.length + ": " + n.nome;
-    try { n.res = await analisarNota(n.b64, n.mime); n.status = "ok"; }
-    catch(e) { n.erro = e.message; n.status = "err"; }
-    atualizarBadge(n);
+
+  function addFiles(files) {
+    var arr = Array.from(files).filter(function(f) { return f.type.startsWith("image/"); });
+    if (!arr.length) return;
+    var done = 0;
+    arr.forEach(function(f) {
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        notas.push({
+          id: Date.now() + "_" + Math.random(),
+          nome: f.name,
+          b64: ev.target.result.split(",")[1],
+          mime: f.type || "image/jpeg",
+          thumb: ev.target.result,
+          status: "wait", res: null, erro: null, _thumb: null
+        });
+        done++;
+        if (done === arr.length) {
+          renderFila();
+          dropZone.style.display = "none";
+          filaDiv.style.display = "flex";
+        }
+      };
+      reader.readAsDataURL(f);
+    });
   }
-  progBar.style.width = "100%";
-  progTxt.textContent = "Concluído! " + notas.filter(function(n){return n.status==="ok";}).length + " de " + notas.length;
-  btnAnalisar.disabled = false;
-  var okCount = notas.filter(function(n){return n.status==="ok";}).length;
-  resCnt.textContent = okCount; resCnt.style.display = "inline";
-  renderTabela();
-}
 
-// Helpers OCR
-function norm(s) { return (s||"").toLowerCase().replace(/[^a-z0-9]/g,""); }
-function normS(s) { return (s||"").toLowerCase().replace(/[áàâã]/g,"a").replace(/[éê]/g,"e").replace(/[íî]/g,"i").replace(/[óôõ]/g,"o").replace(/[úû]/g,"u").replace(/[ç]/g,"c"); }
-var MESES = {janeiro:"01",fevereiro:"02",marco:"03","março":"03",abril:"04",maio:"05",junho:"06",julho:"07",agosto:"08",setembro:"09",outubro:"10",novembro:"11",dezembro:"12"};
-function fmtData(s) {
-  var p = s.replace(/[\/\-]/g,"/").split("/");
-  if (p.length===3) { var d=p[0],m=p[1],a=p[2]; if(a.length===2)a="20"+a; return d.padStart(2,"0")+"/"+m.padStart(2,"0")+"/"+a; }
-  return s;
-}
-function anoOk(s) { try { var p=s.replace(/[\/\-]/g,"/").split("/"); var a=parseInt(p[2]||p[0]); return a>=2000&&a<=2030; } catch(e){return false;} }
+  function renderFila() {
+    document.getElementById("filaCnt").textContent = notas.length + (notas.length === 1 ? " nota" : " notas");
+    var lista = document.getElementById("listaNota");
+    lista.innerHTML = "";
+    notas.forEach(function(n) {
+      var el = document.createElement("div");
+      el.className = "ni";
+      el.id = "ni-" + n.id;
 
-function extrairWords(vr) {
-  var out = [];
-  ((vr&&vr.fullTextAnnotation&&vr.fullTextAnnotation.pages)||[]).forEach(function(pg){
-    (pg.blocks||[]).forEach(function(bl){
-      (bl.paragraphs||[]).forEach(function(pr){
-        (pr.words||[]).forEach(function(wd){
-          var t = (wd.symbols||[]).map(function(s){return s.text;}).join("");
-          var vs = (wd.boundingBox&&wd.boundingBox.vertices)||[];
-          if (t.trim()&&vs.length>=4) {
-            var xs=vs.map(function(v){return v.x||0;}), ys=vs.map(function(v){return v.y||0;});
-            out.push({t:t,x1:Math.min.apply(null,xs),y1:Math.min.apply(null,ys),x2:Math.max.apply(null,xs),y2:Math.max.apply(null,ys)});
-          }
+      var img = document.createElement("img");
+      img.src = n.thumb;
+
+      var info = document.createElement("div");
+      info.className = "ni-info";
+      info.innerHTML = '<div class="ni-nome">' + n.nome + '</div><div class="ni-st" id="ns-' + n.id + '">' + badgeHTML(n) + '</div>';
+
+      var rm = document.createElement("button");
+      rm.className = "ni-rm";
+      rm.innerHTML = "&#10005;";
+      rm.setAttribute("data-nid", n.id);
+      rm.addEventListener("click", function() {
+        var nid = this.getAttribute("data-nid");
+        notas = notas.filter(function(x) { return x.id !== nid; });
+        if (!notas.length) {
+          dropZone.style.display = "";
+          filaDiv.style.display = "none";
+        } else { renderFila(); }
+      });
+
+      el.appendChild(img);
+      el.appendChild(info);
+      el.appendChild(rm);
+      lista.appendChild(el);
+    });
+    btnAnalisar.disabled = notas.length === 0;
+  }
+
+  function badgeHTML(n) {
+    if (n.status === "wait") return '<span class="badge bw">aguardando</span>';
+    if (n.status === "proc") return '<span class="badge bp"><span class="ss"></span> processando...</span>';
+    if (n.status === "ok")   return '<span class="badge bok">&#10003; concluído</span>';
+    return '<span class="badge ber">&#10005; erro</span>';
+  }
+
+  function atualizarBadge(n) {
+    var el = document.getElementById("ns-" + n.id);
+    if (el) el.innerHTML = badgeHTML(n);
+  }
+
+  async function analisarTudo() {
+    btnAnalisar.disabled = true;
+    document.getElementById("progWrap").style.display = "block";
+    notas.forEach(function(n) { n.status = "wait"; n.res = null; n.erro = null; n._thumb = null; });
+    for (var i = 0; i < notas.length; i++) {
+      var n = notas[i];
+      n.status = "proc"; atualizarBadge(n);
+      document.getElementById("progBar").style.width = Math.round(i / notas.length * 100) + "%";
+      document.getElementById("progTxt").textContent = "Processando " + (i+1) + " de " + notas.length + ": " + n.nome;
+      try { n.res = await analisarNota(n.b64, n.mime); n.status = "ok"; }
+      catch(e) { n.erro = e.message; n.status = "err"; }
+      atualizarBadge(n);
+    }
+    document.getElementById("progBar").style.width = "100%";
+    document.getElementById("progTxt").textContent = "Concluído! " + notas.filter(function(x){return x.status==="ok";}).length + " de " + notas.length;
+    btnAnalisar.disabled = false;
+    var okN = notas.filter(function(x){return x.status==="ok";}).length;
+    var rc = document.getElementById("resCnt");
+    rc.textContent = okN; rc.style.display = "inline";
+    renderTabela();
+  }
+
+  window.aba = function(n) {
+    document.getElementById("tabUp").classList.toggle("on", n===0);
+    document.getElementById("tabRes").classList.toggle("on", n===1);
+    document.getElementById("paneUp").classList.toggle("on", n===0);
+    document.getElementById("paneRes").classList.toggle("on", n===1);
+  };
+
+  function norm(s) { return (s||"").toLowerCase().replace(/[^a-z0-9]/g,""); }
+  function normS(s) {
+    return (s||"").toLowerCase()
+      .replace(/[áàâã]/g,"a").replace(/[éê]/g,"e").replace(/[íî]/g,"i")
+      .replace(/[óôõ]/g,"o").replace(/[úû]/g,"u").replace(/[ç]/g,"c");
+  }
+  var MESES = {
+    janeiro:"01",fevereiro:"02",marco:"03","março":"03",abril:"04",
+    maio:"05",junho:"06",julho:"07",agosto:"08",setembro:"09",
+    outubro:"10",novembro:"11",dezembro:"12"
+  };
+  function fmtD(s) {
+    var p = s.replace(/[\/\-]/g,"/").split("/");
+    if (p.length===3) {
+      var d=p[0],m=p[1],a=p[2];
+      if (a.length===2) a="20"+a;
+      return d.padStart(2,"0")+"/"+m.padStart(2,"0")+"/"+a;
+    }
+    return s;
+  }
+  function anoOk(s) {
+    try { var p=s.replace(/[\/\-]/g,"/").split("/"); var a=parseInt(p[2]||p[0]); return a>=2000&&a<=2030; }
+    catch(e){return false;}
+  }
+
+  function extrairWords(vr) {
+    var out = [];
+    var pages = (vr && vr.fullTextAnnotation && vr.fullTextAnnotation.pages) || [];
+    pages.forEach(function(pg) {
+      (pg.blocks||[]).forEach(function(bl) {
+        (bl.paragraphs||[]).forEach(function(pr) {
+          (pr.words||[]).forEach(function(wd) {
+            var t = (wd.symbols||[]).map(function(s){return s.text;}).join("");
+            var vs = (wd.boundingBox&&wd.boundingBox.vertices)||[];
+            if (t.trim()&&vs.length>=4) {
+              var xs=vs.map(function(v){return v.x||0;});
+              var ys=vs.map(function(v){return v.y||0;});
+              out.push({t:t,x1:Math.min.apply(null,xs),y1:Math.min.apply(null,ys),x2:Math.max.apply(null,xs),y2:Math.max.apply(null,ys)});
+            }
+          });
         });
       });
     });
-  });
-  return out;
-}
+    return out;
+  }
 
-function agruparLinhas(ws) {
-  var used = new Set(), ls = [];
-  ws.slice().sort(function(a,b){return a.y1-b.y1;}).forEach(function(w,i){
-    if (used.has(i)) return;
-    var l = {ws:[w],y1:w.y1,y2:w.y2,x1:w.x1,x2:w.x2}; used.add(i);
-    ws.forEach(function(w2,j){
-      if (used.has(j)) return;
-      var alt = ((w.y2-w.y1)+(w2.y2-w2.y1))/2;
-      if (Math.abs((w.y1+w.y2)/2-(w2.y1+w2.y2)/2)<alt*.65) {
-        l.ws.push(w2); l.y1=Math.min(l.y1,w2.y1); l.y2=Math.max(l.y2,w2.y2);
-        l.x1=Math.min(l.x1,w2.x1); l.x2=Math.max(l.x2,w2.x2); used.add(j);
-      }
-    });
-    l.ws.sort(function(a,b){return a.x1-b.x1;}); l.txt=l.ws.map(function(w){return w.t;}).join(" "); ls.push(l);
-  });
-  return ls.sort(function(a,b){return a.y1-b.y1;});
-}
-
-async function analisarNota(b64, mime) {
-  var vrResp = await fetch("https://vision.googleapis.com/v1/images:annotate?key=" + VK, {
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({requests:[{image:{content:b64},features:[{type:"DOCUMENT_TEXT_DETECTION"}]}]})
-  });
-  if (!vrResp.ok) throw new Error("Vision HTTP " + vrResp.status);
-  var vrJson = await vrResp.json();
-  var vr = vrJson.responses && vrJson.responses[0];
-  var txt = (vr && vr.fullTextAnnotation && vr.fullTextAnnotation.text) || "";
-  var ws = extrairWords(vr);
-  var ls = agruparLinhas(ws);
-  if (!ws.length) throw new Error("Texto não detectado");
-  var natH = Math.max.apply(null, ws.map(function(w){return w.y2;}).concat([1]));
-  var nt = norm(txt);
-  var tipo = nt.includes("nfce")||nt.includes("notafiscaldeconsumidor") ? "NFC-e"
-    : nt.includes("danfe")||nt.includes("notafiscaleletronica") ? "NF-e"
-    : nt.includes("nfse") ? "NFS-e"
-    : nt.includes("rps")||nt.includes("reciboprovisorio") ? "RPS"
-    : nt.includes("cupomfiscal") ? "Cupom"
-    : nt.includes("comprovantevenda")||nt.includes("comprovante") ? "Comprovante"
-    : nt.includes("recibo") ? "Recibo"
-    : "Documento Fiscal";
-
-  var dataR = extrairData(txt, ws, ls, natH);
-  var numR = extrairNum(tipo, txt, ws, ls, natH);
-  var valR = extrairVal(tipo, txt, ws, ls);
-
-  // Claude fallback para recibos ou campos faltando
-  var ehManuscrito = tipo==="Recibo" || tipo==="Documento Fiscal";
-  if (!dataR || !valR || ehManuscrito) {
-    try {
-      var prompt = "Analise este documento fiscal brasileiro. Extraia DATA (DD/MM/AAAA), NUMERO da nota (so se campo explicito NF n, RPS, NFC-e n, Extrato N - NAO use Ticket, Seq, Controle, codigos com letras), VALOR TOTAL (campo R$). Responda JSON puro: {data:DD/MM/AAAA,numero:X,valor:R$ X,XX,data_ok:true,numero_ok:false,valor_ok:true}. Use null/false se nao encontrar.";
-      var crResp = await fetch("https://api.anthropic.com/v1/messages", {
-        method:"POST",
-        headers:{"Content-Type":"application/json","x-api-key":CK,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-        body: JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:200,messages:[{role:"user",content:[
-          {type:"image",source:{type:"base64",media_type:mime,data:b64}},
-          {type:"text",text:prompt}
-        ]}]})
+  function agruparLinhas(ws) {
+    var used=new Set(), ls=[];
+    ws.slice().sort(function(a,b){return a.y1-b.y1;}).forEach(function(w,i){
+      if (used.has(i)) return;
+      var l={ws:[w],y1:w.y1,y2:w.y2,x1:w.x1,x2:w.x2};
+      used.add(i);
+      ws.forEach(function(w2,j){
+        if (used.has(j)) return;
+        var alt=((w.y2-w.y1)+(w2.y2-w2.y1))/2;
+        if (Math.abs((w.y1+w.y2)/2-(w2.y1+w2.y2)/2)<alt*0.65) {
+          l.ws.push(w2); l.y1=Math.min(l.y1,w2.y1); l.y2=Math.max(l.y2,w2.y2);
+          l.x1=Math.min(l.x1,w2.x1); l.x2=Math.max(l.x2,w2.x2); used.add(j);
+        }
       });
-      if (crResp.ok) {
-        var crJson = await crResp.json();
-        var crTxt = (crJson.content&&crJson.content[0]&&crJson.content[0].text)||"";
-        crTxt = crTxt.replace(/```json|```/g,"").trim();
-        var ct = JSON.parse(crTxt);
-        if (!dataR&&ct.data_ok&&ct.data) dataR={v:ct.data,bbox:null};
-        if (!numR&&ct.numero_ok&&ct.numero) numR={v:ct.numero,bbox:null};
-        if (!valR&&ct.valor_ok&&ct.valor) valR={v:ct.valor,bbox:null};
-      }
-    } catch(e) { console.warn("Claude falhou:", e.message); }
+      l.ws.sort(function(a,b){return a.x1-b.x1;});
+      l.txt = l.ws.map(function(w){return w.t;}).join(" ");
+      ls.push(l);
+    });
+    return ls.sort(function(a,b){return a.y1-b.y1;});
   }
 
-  return {
-    tipo:tipo,
-    data: dataR?dataR.v:null, numero: numR?numR.v:null, valor: valR?valR.v:null,
-    dataBbox: dataR?dataR.bbox:null, numeroBbox: numR?numR.bbox:null, valorBbox: valR?valR.bbox:null,
-    imgW: Math.max.apply(null,ws.map(function(w){return w.x2;}).concat([1])), imgH:natH
-  };
-}
+  async function analisarNota(b64, mime) {
+    var resp = await fetch("https://vision.googleapis.com/v1/images:annotate?key="+VK, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({requests:[{image:{content:b64},features:[{type:"DOCUMENT_TEXT_DETECTION"}]}]})
+    });
+    if (!resp.ok) throw new Error("Vision HTTP " + resp.status);
+    var json = await resp.json();
+    var vr = json.responses && json.responses[0];
+    var txt = (vr&&vr.fullTextAnnotation&&vr.fullTextAnnotation.text)||"";
+    var ws = extrairWords(vr);
+    var ls = agruparLinhas(ws);
+    if (!ws.length) throw new Error("Texto não detectado");
+    var natH = Math.max.apply(null, ws.map(function(w){return w.y2;}).concat([1]));
+    var nt = norm(txt);
+    var tipo = nt.includes("nfce")||nt.includes("notafiscaldeconsumidor") ? "NFC-e"
+      : nt.includes("danfe")||nt.includes("notafiscaleletronica") ? "NF-e"
+      : nt.includes("nfse") ? "NFS-e"
+      : nt.includes("rps")||nt.includes("reciboprovisorio") ? "RPS"
+      : nt.includes("cupomfiscal") ? "Cupom"
+      : nt.includes("comprovantevenda") ? "Comprovante"
+      : nt.includes("recibo") ? "Recibo"
+      : "Documento Fiscal";
 
-function extrairData(txt, ws, ls, natH) {
-  var reD = /\b(\d{2}[\/\-]\d{2}[\/\-]\d{2,4})\b/;
-  var bad = ["validade","vencimento","permanencia","vigencia"];
-  var dataLabs = ["dataehora","datadeemissao","dataaut","emissao","dataemissao","datahora","data:"];
-  // 1. Com label
-  for (var i=0;i<ls.length;i++) {
-    var l=ls[i], n=norm(l.txt);
-    if (bad.some(function(b){return n.includes(b);})) continue;
-    if (!dataLabs.some(function(b){return n.includes(b);})) continue;
-    var m=l.txt.match(reD);
-    if (m&&anoOk(m[1])) { var w=l.ws.find(function(w){return reD.test(w.t)&&anoOk(w.t);})||l; return {v:fmtData(m[1]),bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}}; }
+    var dataR = extData(txt, ws, ls, natH);
+    var numR  = extNum(tipo, txt, ws, ls, natH);
+    var valR  = extVal(tipo, txt, ws, ls);
+
+    // Claude fallback para recibos manuscritos ou campos faltando
+    var ehManuscrito = (tipo==="Recibo"||tipo==="Documento Fiscal");
+    if (!dataR||!valR||ehManuscrito) {
+      try {
+        var cr = await fetch("https://api.anthropic.com/v1/messages", {
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json",
+            "x-api-key":CK,
+            "anthropic-version":"2023-06-01",
+            "anthropic-dangerous-direct-browser-access":"true"
+          },
+          body: JSON.stringify({
+            model:"claude-haiku-4-5-20251001",
+            max_tokens:200,
+            messages:[{role:"user",content:[
+              {type:"image",source:{type:"base64",media_type:mime,data:b64}},
+              {type:"text",text:"Documento fiscal brasileiro. Extraia: DATA (DD/MM/AAAA), NUMERO da nota (so campos NF n, RPS, NFC-e n, Extrato N - NAO use Ticket, Seq, Controle, codigos com letras), VALOR TOTAL (campo R$). JSON puro sem markdown: {\"data\":\"DD/MM/AAAA\",\"numero\":\"X\",\"valor\":\"R$ X,XX\",\"data_ok\":true,\"numero_ok\":false,\"valor_ok\":true}"}
+            ]}]
+          })
+        });
+        if (cr.ok) {
+          var crj = await cr.json();
+          var crt = (crj.content&&crj.content[0]&&crj.content[0].text)||"";
+          crt = crt.replace(/```json|```/g,"").trim();
+          var ct = JSON.parse(crt);
+          if (!dataR&&ct.data_ok&&ct.data) dataR={v:ct.data,bbox:null};
+          if (!numR&&ct.numero_ok&&ct.numero) numR={v:ct.numero,bbox:null};
+          if (!valR&&ct.valor_ok&&ct.valor) valR={v:ct.valor,bbox:null};
+        }
+      } catch(e) { console.warn("Claude falhou:", e.message); }
+    }
+
+    return {
+      tipo:tipo,
+      data:   dataR?dataR.v:null, dataBbox:   dataR?dataR.bbox:null,
+      numero: numR ?numR.v :null, numeroBbox: numR ?numR.bbox :null,
+      valor:  valR ?valR.v :null, valorBbox:  valR ?valR.bbox :null,
+      imgW: Math.max.apply(null,ws.map(function(w){return w.x2;}).concat([1])), imgH:natH
+    };
   }
-  // 2. Superior com ano válido
-  for (var i=0;i<ls.length;i++) {
-    var l=ls[i];
-    if (l.y1>natH*.70) continue;
-    if (bad.some(function(b){return norm(l.txt).includes(b);})) continue;
-    var m=l.txt.match(reD);
-    if (m&&anoOk(m[1])) { var w=l.ws.find(function(w){return reD.test(w.t)&&anoOk(w.t);})||l; return {v:fmtData(m[1]),bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}}; }
-  }
-  // 3. Por extenso
-  var nTxt = normS(txt).replace(/\n/g," ");
-  var mE = nTxt.match(/(\d{1,2})\s+de\s+([a-z]+)\s+(?:de\s+)?(\d{2,4})/);
-  if (mE) {
-    var nm=mE[2].substring(0,4); var mes=MESES[mE[2]]||(Object.entries(MESES).find(function(kv){return kv[0].startsWith(nm);})||[null,null])[1];
-    if (mes) { var ano=mE[3].length===2?"20"+mE[3]:mE[3]; if(anoOk("01/01/"+ano)) { var lDia=ls.find(function(l){return /\d{1,2}\s+de\s+/i.test(l.txt);}); return {v:mE[1].padStart(2,"0")+"/"+mes+"/"+ano,bbox:lDia?{x1:lDia.x1,y1:lDia.y1,x2:lDia.x2,y2:lDia.y2}:null}; } }
-  }
-  // 4. Fragmentada (Fortaleza,)
-  for (var i=0;i<ls.length;i++) {
-    var l=ls[i];
-    if (!norm(l.txt).includes("fortaleza")&&!/\d{1,2}\s+\d{1,2}\s+\d{2,5}/.test(l.txt)) continue;
-    var bloco = [l.txt,(ls[i+1]&&ls[i+1].txt)||""].join(" ").replace(/\b[1l](20\d{2})\b/g,"$1");
-    var nums = bloco.replace(/[^\d\s]/g," ").trim().split(/\s+/).filter(function(n){return /^\d+$/.test(n);});
-    for (var j=0;j<nums.length-1;j++) {
-      var a=nums[j],b=nums[j+1],cc=nums[j+2]||"";
-      if (a.length<=2&&b.length<=2&&(cc.length===4||cc.length===2)) {
-        var d=parseInt(a),m=parseInt(b),ano=parseInt(cc.length===2?"20"+cc:cc);
-        if (d>=1&&d<=31&&m>=1&&m<=12&&ano>=2000&&ano<=2030) { var lN=ls[i+1]; return {v:a.padStart(2,"0")+"/"+b.padStart(2,"0")+"/"+(cc.length===2?"20"+cc:cc),bbox:{x1:l.x1,y1:l.y1,x2:lN?Math.max(l.x2,lN.x2):l.x2,y2:lN?lN.y2:l.y2}}; }
+
+  function extData(txt, ws, ls, natH) {
+    var reD = /\b(\d{2}[\/\-]\d{2}[\/\-]\d{2,4})\b/;
+    var bad = ["validade","vencimento","permanencia","vigencia"];
+    var labs = ["dataehora","datadeemissao","dataaut","emissao","dataemissao","datahora","data:"];
+    var i, l, n, m, w;
+    // 1. Com label
+    for (i=0;i<ls.length;i++) {
+      l=ls[i]; n=norm(l.txt);
+      if (bad.some(function(b){return n.includes(b);})) continue;
+      if (!labs.some(function(b){return n.includes(b);})) continue;
+      m=l.txt.match(reD);
+      if (m&&anoOk(m[1])) {
+        w=l.ws.find(function(w){return reD.test(w.t)&&anoOk(w.t);})||l;
+        return {v:fmtD(m[1]),bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}};
       }
     }
-  }
-  // 5. Fallback
-  for (var i=0;i<ls.length;i++) {
-    var l=ls[i];
-    if (bad.some(function(b){return norm(l.txt).includes(b);})) continue;
-    var m=l.txt.match(reD);
-    if (m&&anoOk(m[1])) { var w=l.ws.find(function(w){return reD.test(w.t)&&anoOk(w.t);})||l; return {v:fmtData(m[1]),bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}}; }
-  }
-  return null;
-}
-
-function extrairNum(tipo, txt, ws, ls, natH) {
-  var bad = ["cpf","cnpj","cep","protocolo","autorizacao","chavedeacesso","versao","terminal","permanencia","validade","patio","fone","telefone","tributos","saldo","ticket","controle","seq0","seq:","seqnr"];
-  function okN(t) { var d=t.replace(/[^0-9]/g,""); return d.length>=3&&d.length<=9&&d.length!==11&&d.length!==14; }
-  if (tipo==="NF-e"||tipo==="NFS-e") {
-    var m=txt.match(/N[º°][.\s]*(\d{3,9})\b/i)||txt.match(/N\.\s*(\d{3,9})\b/i);
-    if (m&&okN(m[1])) { var nd=m[1]; var w=ws.find(function(w){return w.t.replace(/[^0-9]/g,"")===nd;}); return {v:nd,bbox:w?{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}:null}; }
-  }
-  var labs = ["nfcen","nfce","rps","nfse","nfs-e","opp","invoice","extrato","recibono","recion"];
-  for (var i=0;i<ls.length;i++) {
-    var l=ls[i], n=norm(l.txt);
-    if (bad.some(function(b){return n.includes(b);})) continue;
-    if (!labs.some(function(b){return n.includes(b);})) continue;
-    var ws2=l.ws.filter(function(w){var d=w.t.replace(/[^0-9]/g,"").length;return d>=3&&d<=9&&d!==11&&d!==14&&/^[\d][\d.\-]*[\d]$/.test(w.t);});
-    if (ws2.length) { var w=ws2[0]; var vn=w.t.replace(/\./g,"").replace(/^0+/,""); return {v:vn||w.t,bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}}; }
-  }
-  return null;
-}
-
-function extrairVal(tipo, txt, ws, ls) {
-  var bad = ["identificacao","mov.","saldodevedor","desconto","troco","tributos"];
-  function nV(t){return t.replace(/^R\$\s*/i,"").trim().replace(".",",");}
-  function isOk(t){var v=nV(t);if(!v||v==="0,00"||v==="0.00"||v==="0")return false;return /\d+[,.]\d{2}/.test(v)||/^\d{1,6}$/.test(v);}
-  function aV(l) {
-    for(var i=0;i<l.ws.length-1;i++){if(/^R\$$/i.test(l.ws[i].t)){var n=l.ws[i+1];if(/\d/.test(n.t)&&isOk(n.t)){var a=l.ws[i];return {v:"R$ "+nV(n.t),bbox:{x1:a.x1,y1:Math.min(a.y1,n.y1),x2:n.x2,y2:Math.max(a.y2,n.y2)}};}}}
-    var w1=l.ws.find(function(w){return /^R\$\d/.test(w.t);}); if(w1)return{v:"R$ "+nV(w1.t.replace(/^R\$/i,"")),bbox:{x1:w1.x1,y1:w1.y1,x2:w1.x2,y2:w1.y2}};
-    var w2=l.ws.find(function(w){return /^\d+[,.]\d{2}$/.test(w.t)&&isOk(w.t);}); if(w2)return{v:"R$ "+nV(w2.t),bbox:{x1:w2.x1,y1:w2.y1,x2:w2.x2,y2:w2.y2}};
+    // 2. Superior ano válido
+    for (i=0;i<ls.length;i++) {
+      l=ls[i];
+      if (l.y1>natH*0.70) continue;
+      if (bad.some(function(b){return norm(l.txt).includes(b);})) continue;
+      m=l.txt.match(reD);
+      if (m&&anoOk(m[1])) {
+        w=l.ws.find(function(w){return reD.test(w.t)&&anoOk(w.t);})||l;
+        return {v:fmtD(m[1]),bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}};
+      }
+    }
+    // 3. Por extenso
+    var nTxt = normS(txt).replace(/\n/g," ");
+    var mE = nTxt.match(/(\d{1,2})\s+de\s+([a-z]+)\s+(?:de\s+)?(\d{2,4})/);
+    if (mE) {
+      var nm=mE[2].substring(0,4);
+      var mesEntry = Object.entries(MESES).find(function(kv){return kv[0].startsWith(nm)||kv[0]===mE[2];});
+      var mes = MESES[mE[2]] || (mesEntry&&mesEntry[1]);
+      if (mes) {
+        var ano=mE[3].length===2?"20"+mE[3]:mE[3];
+        if (anoOk("01/01/"+ano)) {
+          var lDia=ls.find(function(l){return /\d{1,2}\s+de\s+/i.test(l.txt);});
+          return {v:mE[1].padStart(2,"0")+"/"+mes+"/"+ano, bbox:lDia?{x1:lDia.x1,y1:lDia.y1,x2:lDia.x2,y2:lDia.y2}:null};
+        }
+      }
+    }
+    // 4. Fragmentada
+    for (i=0;i<ls.length;i++) {
+      l=ls[i];
+      if (!norm(l.txt).includes("fortaleza")&&!/\d{1,2}\s+\d{1,2}\s+\d{2,5}/.test(l.txt)) continue;
+      var lnext = ls[i+1];
+      var bloco = [l.txt, lnext?lnext.txt:""].join(" ").replace(/\b[1l](20\d{2})\b/g,"$1");
+      var nums = bloco.replace(/[^\d\s]/g," ").trim().split(/\s+/).filter(function(x){return /^\d+$/.test(x);});
+      for (var j=0;j<nums.length-1;j++) {
+        var a=nums[j],b=nums[j+1],cc=nums[j+2]||"";
+        if (a.length<=2&&b.length<=2&&(cc.length===4||cc.length===2)) {
+          var d=parseInt(a),mm=parseInt(b),aa=parseInt(cc.length===2?"20"+cc:cc);
+          if (d>=1&&d<=31&&mm>=1&&mm<=12&&aa>=2000&&aa<=2030) {
+            return {v:a.padStart(2,"0")+"/"+b.padStart(2,"0")+"/"+(cc.length===2?"20"+cc:cc),
+              bbox:{x1:l.x1,y1:l.y1,x2:lnext?Math.max(l.x2,lnext.x2):l.x2,y2:lnext?lnext.y2:l.y2}};
+          }
+        }
+      }
+    }
+    // 5. Fallback
+    for (i=0;i<ls.length;i++) {
+      l=ls[i];
+      if (bad.some(function(b){return norm(l.txt).includes(b);})) continue;
+      m=l.txt.match(reD);
+      if (m&&anoOk(m[1])) {
+        w=l.ws.find(function(w){return reD.test(w.t)&&anoOk(w.t);})||l;
+        return {v:fmtD(m[1]),bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}};
+      }
+    }
     return null;
   }
-  if (tipo==="NF-e"||tipo==="NFS-e") {
-    var m=txt.match(/[Vv][\s.]*[Tt]otal[\s\S]{0,40}?([\d]{1,3}(?:[.,][\d]{3})*[.,][\d]{2})/);
-    if(m){var vStr=m[1],vNum=parseFloat(vStr.replace(/\./g,"").replace(",","."));if(vNum>0){var w=ws.find(function(w){return w.t.replace(/[^0-9]/g,"")===vStr.replace(/[^0-9]/g,"");});return{v:"R$ "+vStr,bbox:w?{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}:null};}}
-  }
-  var labs=["valortotal","totalapagar","valorapagar","valortotaldaos","totaldaos","totalpago","totalvenda","apagar","valor:","ticketpago","total:","quantia","totestadia","totestacion"];
-  for(var i=0;i<ls.length;i++){var l=ls[i],n=norm(l.txt);if(bad.some(function(b){return n.includes(b);}))continue;var tem=labs.some(function(b){return n.includes(b);});var srcs=tem?[l,ls[i+1]].filter(Boolean):[l];for(var si=0;si<srcs.length;si++){var s=srcs[si];if(!s||bad.some(function(b){return norm(s.txt).includes(b);}))continue;var v=aV(s);if(v&&tem)return v;}}
-  for(var i=0;i<ls.length;i++){var l=ls[i];if(/^R\$$/.test(l.txt.trim())&&ls[i+1]){var nx=ls[i+1];var m=nx.txt.trim().match(/^(\d+[,.]?\d*)$/);if(m&&parseFloat(m[1].replace(",","."))>0){var v2=m[1].includes(",")||m[1].includes(".")?m[1]:m[1]+",00";return{v:"R$ "+v2,bbox:{x1:Math.min(l.x1,nx.x1),y1:l.y1,x2:Math.max(l.x2,nx.x2),y2:nx.y2}};}}for(var wi=0;wi<l.ws.length-1;wi++){if(/^R\$$/i.test(l.ws[wi].t)&&/^\d+$/.test((l.ws[wi+1]&&l.ws[wi+1].t)||"")){var b2=l.ws[wi+1];if(parseInt(b2.t)>0)return{v:"R$ "+b2.t+",00",bbox:{x1:l.ws[wi].x1,y1:Math.min(l.ws[wi].y1,b2.y1),x2:b2.x2,y2:Math.max(l.ws[wi].y2,b2.y2)}};}}
-  }
-  for(var i=0;i<ls.length;i++){var l=ls[i];if(bad.some(function(b){return norm(l.txt).includes(b);}))continue;var v=aV(l);if(v)return v;}
-  return null;
-}
 
-function gerarThumb(src, r, cb) {
-  if (!r||(!r.dataBbox&&!r.numeroBbox&&!r.valorBbox)){cb(src);return;}
-  var img=new Image(); img.onload=function(){
-    var cv2=document.createElement("canvas"); cv2.width=img.naturalWidth; cv2.height=img.naturalHeight;
-    var cx=cv2.getContext("2d"); cx.drawImage(img,0,0);
-    [{bbox:r.dataBbox,cor:"#00e5a0"},{bbox:r.numeroBbox,cor:"#7b5cff"},{bbox:r.valorBbox,cor:"#ff6b35"}].forEach(function(item){
-      if(!item.bbox)return;
-      var x1=item.bbox.x1,y1=item.bbox.y1,x2=item.bbox.x2,y2=item.bbox.y2,w=x2-x1,h=y2-y1,p=Math.max(2,h*.12);
-      cx.save(); cx.globalCompositeOperation="multiply"; cx.fillStyle=item.cor+"CC";
-      cx.beginPath(); cx.roundRect(x1-p,y1-p,w+p*2,h+p*2,3); cx.fill();
-      cx.globalCompositeOperation="source-over"; cx.strokeStyle=item.cor; cx.lineWidth=Math.max(1.5,img.naturalWidth*.002);
-      cx.beginPath(); cx.roundRect(x1-p,y1-p,w+p*2,h+p*2,3); cx.stroke(); cx.restore();
-    });
-    cb(cv2.toDataURL("image/jpeg",.92));
-  }; img.src=src;
-}
-
-function renderTabela() {
-  tbody.innerHTML="";
-  var com=notas.filter(function(n){return n.status==="ok"||n.status==="err";});
-  if(!com.length){tabelaWrap.style.display="none";resVazio.style.display="flex";return;}
-  tabelaWrap.style.display="block"; resVazio.style.display="none";
-  com.forEach(function(n,i){
-    var tr=document.createElement("tr");
-    if(n.status==="ok"){
-      var r=n.res;
-      tr.innerHTML='<td id="td-'+i+'"><img class="tm" src="'+n.thumb+'" title="Ver"></td>'
-        +'<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+n.nome+'">'+n.nome+'</td>'
-        +'<td><span class="tb">'+r.tipo+'</span></td>'
-        +'<td class="'+(r.data?"vok":"vno")+'">'+(r.data||"—")+'</td>'
-        +'<td class="'+(r.numero?"vok":"vno")+'">'+(r.numero||"—")+'</td>'
-        +'<td class="'+(r.valor?"vok":"vno")+'">'+(r.valor||"—")+'</td>'
-        +'<td><span class="badge ok">&#10003; ok</span></td>'
-        +'<td style="display:flex;gap:4px;"><button class="btn-dl" id="dl-'+i+'">&#11015;</button><button class="btn-dl" id="ed-'+i+'" style="font-size:11px;">&#9998;</button></td>';
-      tbody.appendChild(tr);
-      (function(nota,idx){
-        gerarThumb(nota.thumb,nota.res,function(url){
-          nota._thumb=url;
-          var td=document.getElementById("td-"+idx);
-          if(td){var img=td.querySelector("img");if(img){img.src=url;img.onclick=function(){verModal(url);};}}
-          var dl=document.getElementById("dl-"+idx); if(dl)dl.onclick=function(){baixar(url,nota.nome);};
-          var ed=document.getElementById("ed-"+idx); if(ed)ed.onclick=function(){abrirEdit(nota,idx);};
-        });
-      })(n,i);
-    } else {
-      tr.innerHTML='<td><img class="tm" src="'+n.thumb+'"></td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+n.nome+'</td><td>—</td><td>—</td><td>—</td><td style="color:#ff6b35;font-size:11px;">'+(n.erro||"Erro").substring(0,25)+'</td><td><span class="badge er">&#10005; erro</span></td><td></td>';
-      tbody.appendChild(tr);
+  function extNum(tipo, txt, ws, ls, natH) {
+    var bad=["cpf","cnpj","cep","protocolo","autorizacao","chavedeacesso","versao","terminal","permanencia","validade","patio","fone","telefone","tributos","saldo","ticket","controle","seq0","seqnr"];
+    function okN(t){var d=t.replace(/[^0-9]/g,"");return d.length>=3&&d.length<=9&&d.length!==11&&d.length!==14;}
+    var i, l, n, m, w;
+    if (tipo==="NF-e"||tipo==="NFS-e") {
+      m=txt.match(/N[º°][\.\s]*(\d{3,9})\b/i)||txt.match(/N\.\s*(\d{3,9})\b/i);
+      if (m&&okN(m[1])) {
+        var nd=m[1];
+        w=ws.find(function(w){return w.t.replace(/[^0-9]/g,"")===nd;});
+        return {v:nd,bbox:w?{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}:null};
+      }
     }
-  });
-  aba(1);
-}
+    var labs=["nfcen","nfce","rps","nfse","nfs-e","opp","invoice","extrato","recibono"];
+    for (i=0;i<ls.length;i++) {
+      l=ls[i]; n=norm(l.txt);
+      if (bad.some(function(b){return n.includes(b);})) continue;
+      if (!labs.some(function(b){return n.includes(b);})) continue;
+      var ws2=l.ws.filter(function(w){var d=w.t.replace(/[^0-9]/g,"").length;return d>=3&&d<=9&&d!==11&&d!==14&&/^[\d][\d.\-]*[\d]$/.test(w.t);});
+      if (ws2.length) {
+        w=ws2[0]; var vn=w.t.replace(/\./g,"").replace(/^0+/,"");
+        return {v:vn||w.t,bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}};
+      }
+    }
+    return null;
+  }
 
-function verModal(url){document.getElementById("modalImg").src=url;document.getElementById("modal").classList.add("on");}
-function fecharModal(){document.getElementById("modal").classList.remove("on");document.getElementById("modalImg").src="";}
-function baixar(url,nome){var a=document.createElement("a");a.href=url;a.download=(nome.replace(/\.[^.]+$/,"")||"nota")+"_anotada.jpg";document.body.appendChild(a);a.click();a.remove();}
-function abrirEdit(nota,idx){_editNota=nota;_editIdx=idx;document.getElementById("editImg").src=nota.thumb;document.getElementById("editData").value=nota.res&&nota.res.data||"";document.getElementById("editNum").value=nota.res&&nota.res.numero||"";document.getElementById("editVal").value=nota.res&&nota.res.valor||"";document.getElementById("modalEdit").classList.add("on");}
-function fecharEdit(){document.getElementById("modalEdit").classList.remove("on");_editNota=null;_editIdx=null;}
-function salvarEdit(){if(!_editNota)return;var data=document.getElementById("editData").value.trim(),num=document.getElementById("editNum").value.trim(),val=document.getElementById("editVal").value.trim();if(data)_editNota.res.data=data;if(num)_editNota.res.numero=num;if(val)_editNota.res.valor=val;var tr=document.getElementById("td-"+_editIdx)&&document.getElementById("td-"+_editIdx).closest("tr");if(tr){var tds=tr.querySelectorAll("td");if(tds[3])tds[3].textContent=_editNota.res.data||"—";if(tds[4])tds[4].textContent=_editNota.res.numero||"—";if(tds[5])tds[5].textContent=_editNota.res.valor||"—";[3,4,5].forEach(function(i){if(tds[i])tds[i].className=tds[i].textContent!=="—"?"vok":"vno";});}fecharEdit();}
-async function baixarTodas(){var ok=notas.filter(function(n){return n.status==="ok";});if(!ok.length){alert("Nenhuma nota processada.");return;}for(var i=0;i<ok.length;i++){var n=ok[i];await new Promise(function(resolve){function dl(url){baixar(url,n.nome);setTimeout(resolve,500);}if(n._thumb)dl(n._thumb);else gerarThumb(n.thumb,n.res,dl);});}}
-function exportCSV(){var ok=notas.filter(function(n){return n.status==="ok";});if(!ok.length)return;var rows=[["Arquivo","Tipo","Data","Número","Valor"]].concat(ok.map(function(n){return[n.nome,n.res.tipo||"",n.res.data||"",n.res.numero||"",n.res.valor||""];}));var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\n");var a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));a.download="notas_fiscais.csv";a.click();}
-function copiarJSON(){navigator.clipboard.writeText(JSON.stringify(notas.filter(function(n){return n.status==="ok";}).map(function(n){return{arquivo:n.nome,tipo:n.res.tipo,data:n.res.data,numero:n.res.numero,valor:n.res.valor};}),null,2)).then(function(){alert("JSON copiado!");});}
+  function extVal(tipo, txt, ws, ls) {
+    var bad=["identificacao","mov.","saldodevedor","desconto","troco","tributos"];
+    function nV(t){return t.replace(/^R\$\s*/i,"").trim().replace(".",",");}
+    function isOk(t){var v=nV(t);if(!v||v==="0,00"||v==="0.00"||v==="0")return false;return /\d+[,.]\d{2}/.test(v)||/^\d{1,6}$/.test(v);}
+    function aV(l) {
+      var i,n,a;
+      for(i=0;i<l.ws.length-1;i++){
+        if(/^R\$$/i.test(l.ws[i].t)){n=l.ws[i+1];if(n&&/\d/.test(n.t)&&isOk(n.t)){a=l.ws[i];return{v:"R$ "+nV(n.t),bbox:{x1:a.x1,y1:Math.min(a.y1,n.y1),x2:n.x2,y2:Math.max(a.y2,n.y2)}};}}
+      }
+      var w1=l.ws.find(function(w){return /^R\$\d/.test(w.t);});
+      if(w1)return{v:"R$ "+nV(w1.t.replace(/^R\$/i,"")),bbox:{x1:w1.x1,y1:w1.y1,x2:w1.x2,y2:w1.y2}};
+      var w2=l.ws.find(function(w){return /^\d+[,.]\d{2}$/.test(w.t)&&isOk(w.t);});
+      if(w2)return{v:"R$ "+nV(w2.t),bbox:{x1:w2.x1,y1:w2.y1,x2:w2.x2,y2:w2.y2}};
+      return null;
+    }
+    var i,l,n,v,m;
+    if(tipo==="NF-e"||tipo==="NFS-e"){
+      m=txt.match(/[Vv][\s.]*[Tt]otal[\s\S]{0,40}?([\d]{1,3}(?:[.,][\d]{3})*[.,][\d]{2})/);
+      if(m){var vStr=m[1],vNum=parseFloat(vStr.replace(/\./g,"").replace(",","."));if(vNum>0){var w=ws.find(function(w){return w.t.replace(/[^0-9]/g,"")===vStr.replace(/[^0-9]/g,"");});return{v:"R$ "+vStr,bbox:w?{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}:null};}}
+    }
+    var labs=["valortotal","totalapagar","valorapagar","valortotaldaos","totaldaos","totalpago","totalvenda","apagar","valor:","ticketpago","total:","quantia","totestadia"];
+    for(i=0;i<ls.length;i++){l=ls[i];n=norm(l.txt);if(bad.some(function(b){return n.includes(b);}))continue;var tem=labs.some(function(b){return n.includes(b);});var srcs=tem?[l,ls[i+1]].filter(Boolean):[l];for(var si=0;si<srcs.length;si++){var s=srcs[si];if(!s||bad.some(function(b){return norm(s.txt).includes(b);}))continue;v=aV(s);if(v&&tem)return v;}}
+    for(i=0;i<ls.length;i++){l=ls[i];if(/^R\$$/.test(l.txt.trim())&&ls[i+1]){var nx=ls[i+1];m=nx.txt.trim().match(/^(\d+[,.]?\d*)$/);if(m&&parseFloat(m[1].replace(",","."))>0){var v2=m[1].includes(",")||m[1].includes(".")?m[1]:m[1]+",00";return{v:"R$ "+v2,bbox:{x1:Math.min(l.x1,nx.x1),y1:l.y1,x2:Math.max(l.x2,nx.x2),y2:nx.y2}};}}for(var wi=0;wi<l.ws.length-1;wi++){if(/^R\$$/i.test(l.ws[wi].t)&&/^\d+$/.test((l.ws[wi+1]&&l.ws[wi+1].t)||"")){var b2=l.ws[wi+1];if(parseInt(b2.t)>0)return{v:"R$ "+b2.t+",00",bbox:{x1:l.ws[wi].x1,y1:Math.min(l.ws[wi].y1,b2.y1),x2:b2.x2,y2:Math.max(l.ws[wi].y2,b2.y2)}};}}}
+    for(i=0;i<ls.length;i++){l=ls[i];if(bad.some(function(b){return norm(l.txt).includes(b);}))continue;v=aV(l);if(v)return v;}
+    return null;
+  }
+
+  function gerarThumb(src, r, cb) {
+    if (!r||(!r.dataBbox&&!r.numeroBbox&&!r.valorBbox)){cb(src);return;}
+    var img=new Image(); img.onload=function(){
+      var cv2=document.createElement("canvas"); cv2.width=img.naturalWidth; cv2.height=img.naturalHeight;
+      var cx=cv2.getContext("2d"); cx.drawImage(img,0,0);
+      [{bbox:r.dataBbox,cor:"#00e5a0"},{bbox:r.numeroBbox,cor:"#7b5cff"},{bbox:r.valorBbox,cor:"#ff6b35"}].forEach(function(item){
+        if(!item.bbox)return;
+        var x1=item.bbox.x1,y1=item.bbox.y1,x2=item.bbox.x2,y2=item.bbox.y2,w=x2-x1,h=y2-y1,p=Math.max(2,h*0.12);
+        cx.save(); cx.globalCompositeOperation="multiply"; cx.fillStyle=item.cor+"CC";
+        cx.beginPath(); cx.roundRect(x1-p,y1-p,w+p*2,h+p*2,3); cx.fill();
+        cx.globalCompositeOperation="source-over"; cx.strokeStyle=item.cor; cx.lineWidth=Math.max(1.5,img.naturalWidth*0.002);
+        cx.beginPath(); cx.roundRect(x1-p,y1-p,w+p*2,h+p*2,3); cx.stroke(); cx.restore();
+      });
+      cb(cv2.toDataURL("image/jpeg",0.92));
+    }; img.src=src;
+  }
+
+  function renderTabela() {
+    var tbody=document.getElementById("tbody");
+    tbody.innerHTML="";
+    var com=notas.filter(function(n){return n.status==="ok"||n.status==="err";});
+    if(!com.length){document.getElementById("tabelaWrap").style.display="none";document.getElementById("resVazio").style.display="flex";return;}
+    document.getElementById("tabelaWrap").style.display="block"; document.getElementById("resVazio").style.display="none";
+    com.forEach(function(n,i){
+      var tr=document.createElement("tr");
+      if(n.status==="ok"){
+        var r=n.res;
+        var tdImg=document.createElement("td"); tdImg.id="td-"+i;
+        var tImg=document.createElement("img"); tImg.className="tm"; tImg.src=n.thumb; tImg.title="Ver";
+        tdImg.appendChild(tImg); tr.appendChild(tdImg);
+        var tdNome=document.createElement("td"); tdNome.style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"; tdNome.title=n.nome; tdNome.textContent=n.nome; tr.appendChild(tdNome);
+        var tdTipo=document.createElement("td"); tdTipo.innerHTML='<span class="tb2">'+r.tipo+'</span>'; tr.appendChild(tdTipo);
+        var tdD=document.createElement("td"); tdD.className=r.data?"vok":"vno"; tdD.textContent=r.data||"—"; tr.appendChild(tdD);
+        var tdN=document.createElement("td"); tdN.className=r.numero?"vok":"vno"; tdN.textContent=r.numero||"—"; tr.appendChild(tdN);
+        var tdV=document.createElement("td"); tdV.className=r.valor?"vok":"vno"; tdV.textContent=r.valor||"—"; tr.appendChild(tdV);
+        var tdS=document.createElement("td"); tdS.innerHTML='<span class="badge bok">&#10003; ok</span>'; tr.appendChild(tdS);
+        var tdA=document.createElement("td"); tdA.style="display:flex;gap:4px;";
+        var dlBtn=document.createElement("button"); dlBtn.className="btn-dl"; dlBtn.innerHTML="&#11015;"; dlBtn.id="dl-"+i;
+        var edBtn=document.createElement("button"); edBtn.className="btn-dl"; edBtn.innerHTML="&#9998;"; edBtn.style.fontSize="11px"; edBtn.id="ed-"+i;
+        tdA.appendChild(dlBtn); tdA.appendChild(edBtn); tr.appendChild(tdA);
+        tbody.appendChild(tr);
+        (function(nota,idx){
+          gerarThumb(nota.thumb,nota.res,function(url){
+            nota._thumb=url;
+            var td=document.getElementById("td-"+idx);
+            if(td){var img=td.querySelector("img");if(img){img.src=url;img.addEventListener("click",function(){verModal(url);});}}
+            var dl=document.getElementById("dl-"+idx); if(dl)dl.addEventListener("click",function(){baixar(url,nota.nome);});
+            var ed=document.getElementById("ed-"+idx); if(ed)ed.addEventListener("click",function(){abrirEdit(nota,idx);});
+          });
+        })(n,i);
+      } else {
+        var tdI=document.createElement("td"); var tI=document.createElement("img"); tI.className="tm"; tI.src=n.thumb; tdI.appendChild(tI); tr.appendChild(tdI);
+        var tdNm=document.createElement("td"); tdNm.style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"; tdNm.textContent=n.nome; tr.appendChild(tdNm);
+        ["—","—","—"].forEach(function(v){var td=document.createElement("td");td.textContent=v;tr.appendChild(td);});
+        var tdEr=document.createElement("td"); tdEr.style="color:#ff6b35;font-size:11px;"; tdEr.textContent=(n.erro||"Erro").substring(0,25); tr.appendChild(tdEr);
+        var tdSt=document.createElement("td"); tdSt.innerHTML='<span class="badge ber">&#10005; erro</span>'; tr.appendChild(tdSt);
+        var tdE=document.createElement("td"); tr.appendChild(tdE);
+        tbody.appendChild(tr);
+      }
+    });
+    window.aba(1);
+  }
+
+  window.fecharModal=function(){document.getElementById("modal").classList.remove("on");document.getElementById("modalImg").src="";};
+  function verModal(url){document.getElementById("modalImg").src=url;document.getElementById("modal").classList.add("on");}
+  function baixar(url,nome){var a=document.createElement("a");a.href=url;a.download=(nome.replace(/\.[^.]+$/,"")||"nota")+"_anotada.jpg";document.body.appendChild(a);a.click();a.remove();}
+
+  function abrirEdit(nota,idx){
+    _editNota=nota;_editIdx=idx;
+    document.getElementById("editImg").src=nota.thumb;
+    document.getElementById("editData").value=(nota.res&&nota.res.data)||"";
+    document.getElementById("editNum").value=(nota.res&&nota.res.numero)||"";
+    document.getElementById("editVal").value=(nota.res&&nota.res.valor)||"";
+    document.getElementById("modalEdit").classList.add("on");
+  }
+  window.fecharEdit=function(){document.getElementById("modalEdit").classList.remove("on");_editNota=null;_editIdx=null;};
+  window.salvarEdit=function(){
+    if(!_editNota)return;
+    var data=document.getElementById("editData").value.trim();
+    var num=document.getElementById("editNum").value.trim();
+    var val=document.getElementById("editVal").value.trim();
+    if(data)_editNota.res.data=data;
+    if(num)_editNota.res.numero=num;
+    if(val)_editNota.res.valor=val;
+    var tr=document.getElementById("td-"+_editIdx)&&document.getElementById("td-"+_editIdx).closest("tr");
+    if(tr){
+      var tds=tr.querySelectorAll("td");
+      if(tds[3])tds[3].textContent=_editNota.res.data||"—";
+      if(tds[4])tds[4].textContent=_editNota.res.numero||"—";
+      if(tds[5])tds[5].textContent=_editNota.res.valor||"—";
+      [3,4,5].forEach(function(i){if(tds[i])tds[i].className=tds[i].textContent!=="—"?"vok":"vno";});
+    }
+    fecharEdit();
+  };
+
+  window.baixarTodas=function(){
+    var ok=notas.filter(function(n){return n.status==="ok";});
+    if(!ok.length){alert("Nenhuma nota processada.");return;}
+    var i=0;
+    function next(){if(i>=ok.length)return;var n=ok[i++];function dl(url){baixar(url,n.nome);setTimeout(next,500);}if(n._thumb)dl(n._thumb);else gerarThumb(n.thumb,n.res,dl);}
+    next();
+  };
+  window.exportCSV=function(){
+    var ok=notas.filter(function(n){return n.status==="ok";});if(!ok.length)return;
+    var rows=[["Arquivo","Tipo","Data","Número","Valor"]].concat(ok.map(function(n){return[n.nome,n.res.tipo||"",n.res.data||"",n.res.numero||"",n.res.valor||""];}));
+    var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+    var a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));a.download="notas_fiscais.csv";a.click();
+  };
+  window.copiarJSON=function(){
+    navigator.clipboard.writeText(JSON.stringify(notas.filter(function(n){return n.status==="ok";}).map(function(n){return{arquivo:n.nome,tipo:n.res.tipo,data:n.res.data,numero:n.res.numero,valor:n.res.valor};}),null,2)).then(function(){alert("JSON copiado!");});
+  };
+});
+
 </script>
 </body>
 </html>
