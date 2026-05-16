@@ -190,13 +190,13 @@ function extrairData(txt,ws,ls,natH){
 
 function extrairNumero(tipo,txt,ws,ls,natH){
   function okN(t){const d=t.replace(/[^0-9]/g,"");return d.length>=3&&d.length<=15&&d.length!==11&&d.length!==14;}
-  const bad=["cpf","cnpj","cep","protocolo","autorizacao","chavedeacesso","versao","terminal","permanencia","validade","patio","documento:","fone","telefone","tributos","saldo"];
+  const bad=["cpf","cnpj","cep","protocolo","autorizacao","chavedeacesso","versao","terminal","permanencia","validade","patio","documento:","fone","telefone","tributos","saldo","ticket:","ticket","controle:","seq:","seq0"];
   if(tipo==="NF-e"||tipo==="NFS-e"){
     const m=txt.match(/N[º°][.\s]*(\d{3,9})\b/i)||txt.match(/N\.\s*(\d{3,9})\b/i);
     if(m){const nd=m[1];const w=ws.find(w=>w.t.replace(/[^0-9]/g,"")===nd)||ws.find(w=>w.t.includes(nd)&&w.t.length<=nd.length+3);return{v:nd,bbox:w?{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}:null};}
     for(const l of ls){if(l.y1>natH*.20)continue;for(const w of l.ws){const d=w.t.replace(/[^0-9]/g,"");if(d.length>=5&&d.length<=9&&d===w.t&&d.length!==11&&d.length!==14)return{v:w.t,bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}};}}
   }
-  const labels=["rps","nfse","nfs-e","opp","invoice","nfce","nfc-e","extrato","extraton","extraton°"];
+  const labels=["nfcen","nfcen°","nfcenº","rps","nfse","nfs-e","opp","invoice","nfce","nfc-e","extrato","extraton"];
   for(const l of ls){
     const n=N(l.txt);
     if(bad.some(b=>n.includes(b)))continue;
@@ -388,8 +388,8 @@ VALOR: Leia o campo após "R$" na imagem com muita atenção. Em manuscrito curs
 - Verifique o contexto: estacionamento cobra tipicamente R$ 8 a R$ 80
 
 NÚMERO DA NOTA: Apenas se houver campo específico "NF n°", "RPS", "NFC-e n°", "Extrato N°".
-NÃO use: CNPJ, CPF, telefone, protocolo de autorização, chave de acesso, código de barras.
-Para NFC-e: o número está no campo "NFC-e n°" — é um número CURTO (3-6 dígitos), não o protocolo longo.
+NÃO use como número: CNPJ, CPF, telefone, protocolo, chave de acesso, código de barras, Ticket, Seq, Controle, x7lavrnD ou qualquer código alfanumérico com letras.
+Para NFC-e: o número está EXATAMENTE no campo "NFC-e n°" ou "NF-e n°" — é só dígitos, curto (2-6 dígitos). Se não houver esse campo explícito, retorne numero_ok:false.
 
 Responda SOMENTE com JSON puro sem markdown:
 {"data":"DD/MM/AAAA","numero":"X","valor":"R$ X,XX","data_ok":true,"numero_ok":false,"valor_ok":true}
