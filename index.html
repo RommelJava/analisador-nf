@@ -122,6 +122,7 @@ td{padding:9px 14px;border-bottom:1px solid #1c1c26;vertical-align:middle;}tr:ho
 <script>
 
 const VK="AIzaSyCXA7j449mZIjNSyCr_a0OJ0zLk3Q11jIk";
+const CK=["sk-ant-api03-4r8g6O4dDF8Osk","7UTsz5CVwDgtY816v59K2qHGhZl","G0q9yDlAKmQtKu9uVOChef5kGXb","oOVSR3J7XVoAlYc8tQ-SjkwLQAA"].join("");
 const N=s=>(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
 const NS=s=>(s||"").toLowerCase().replace(/[áàâã]/g,"a").replace(/[éê]/g,"e").replace(/[íî]/g,"i").replace(/[óôõ]/g,"o").replace(/[úû]/g,"u").replace(/[ç]/g,"c");
 const MESES={"janeiro":"01","fevereiro":"02","marco":"03","março":"03","abril":"04","maio":"05","junho":"06","julho":"07","agosto":"08","setembro":"09","outubro":"10","novembro":"11","dezembro":"12"};
@@ -359,9 +360,14 @@ async function analisarNota(b64,mime){
     try{
       const cr=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        headers:{
+          "Content-Type":"application/json",
+          "x-api-key":CK,
+          "anthropic-version":"2023-06-01",
+          "anthropic-dangerous-direct-browser-access":"true"
+        },
         body:JSON.stringify({
-          model:"claude-sonnet-4-20250514",
+          model:"claude-haiku-4-5-20251001",
           max_tokens:300,
           messages:[{role:"user",content:[
             {type:"image",source:{type:"base64",media_type:mime,data:b64}},
