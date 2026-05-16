@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Analisador NF — Múltiplas Notas</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:sans-serif;background:#0a0a0f;color:#e8e8f0;min-height:100vh;display:flex;flex-direction:column;}
+header{background:#13131a;border-bottom:1px solid #2a2a3a;padding:12px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.logo{width:28px;height:28px;background:linear-gradient(135deg,#00e5a0,#7b5cff);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#000;}
+header h1{font-size:15px;}.tag{margin-left:auto;font-size:10px;color:#6b6b85;background:#1c1c26;padding:3px 8px;border-radius:20px;border:1px solid #2a2a3a;}
+.tabs{display:flex;background:#13131a;border-bottom:1px solid #2a2a3a;padding:0 20px;flex-shrink:0;}
+.tab{padding:10px 18px;font-size:12px;cursor:pointer;color:#6b6b85;border-bottom:2px solid transparent;transition:all .15s;}
+.tab.on{color:#00e5a0;border-bottom-color:#00e5a0;}.tab:hover:not(.on){color:#e8e8f0;}
+.pane{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0;}
+.pane.on{display:flex;}
+#drop{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;padding:40px;border:2px dashed #2a2a3a;margin:20px;border-radius:12px;transition:all .2s;}
+#drop:hover,#drop.over{border-color:#00e5a0;background:#0d1a14;}
+#drop .icon{font-size:48px;opacity:.4;}#drop h2{font-size:18px;font-weight:700;}
+#drop p{font-size:13px;color:#6b6b85;text-align:center;line-height:1.6;}
+.btn-sel{padding:10px 28px;background:#00e5a0;color:#000;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:13px;}
+#fila{display:none;flex-direction:column;overflow:hidden;flex:1;min-height:0;}
+#fila-header{padding:14px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #2a2a3a;flex-shrink:0;}
+#fila-header h3{font-size:13px;font-weight:700;}
+.btn-sm{padding:5px 12px;background:transparent;border:1px solid #2a2a3a;border-radius:5px;color:#6b6b85;font-size:11px;cursor:pointer;}
+.btn-sm:hover{border-color:#00e5a0;color:#00e5a0;}.sp{flex:1;}
+.btn-go{padding:8px 20px;background:#00e5a0;color:#000;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;}
+.btn-go:hover{opacity:.85;}.btn-go:disabled{opacity:.35;cursor:not-allowed;}
+#lista{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;}
+.ni{background:#1c1c26;border:1px solid #2a2a3a;border-radius:8px;display:flex;align-items:center;gap:12px;padding:10px 14px;}
+.ni-thumb{width:44px;height:44px;border-radius:5px;object-fit:cover;flex-shrink:0;border:1px solid #2a2a3a;}
+.ni-info{flex:1;min-width:0;}.ni-nome{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ni-st{font-size:10px;color:#6b6b85;margin-top:2px;font-family:monospace;}
+.ni-rm{background:transparent;border:none;color:#6b6b85;cursor:pointer;font-size:16px;padding:4px;}.ni-rm:hover{color:#ff6b35;}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 7px;border-radius:10px;font-family:monospace;}
+.badge.wait{background:#1c1c26;color:#6b6b85;border:1px solid #2a2a3a;}
+.badge.proc{background:rgba(0,229,160,.1);color:#00e5a0;border:1px solid rgba(0,229,160,.3);}
+.badge.ok{background:rgba(0,229,160,.12);color:#00e5a0;}.badge.err{background:rgba(255,107,53,.1);color:#ff6b35;}
+.spin-s{width:10px;height:10px;border:1.5px solid rgba(0,229,160,.3);border-top-color:#00e5a0;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#prog-wrap{display:none;padding:0 20px 12px;flex-shrink:0;}
+#prog-out{background:#1c1c26;border-radius:4px;height:6px;overflow:hidden;}
+#prog-bar{height:100%;background:#00e5a0;border-radius:4px;width:0%;transition:width .3s;}
+#prog-txt{font-size:10px;color:#6b6b85;margin-top:4px;font-family:monospace;}
+#res-header{padding:14px 20px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #2a2a3a;flex-shrink:0;}
+#res-header h3{font-size:13px;font-weight:700;}
+.btn-exp{padding:6px 14px;background:transparent;border:1px solid #2a2a3a;border-radius:5px;color:#6b6b85;font-size:11px;cursor:pointer;}
+.btn-exp:hover{border-color:#00e5a0;color:#00e5a0;}
+#tabela-wrap{flex:1;overflow:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead{position:sticky;top:0;background:#13131a;z-index:1;}
+th{padding:10px 14px;text-align:left;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#6b6b85;border-bottom:1px solid #2a2a3a;font-weight:700;white-space:nowrap;}
+td{padding:9px 14px;border-bottom:1px solid #1c1c26;vertical-align:middle;}tr:hover td{background:#13131a;}
+.tm{width:36px;height:36px;border-radius:4px;object-fit:cover;border:1px solid #2a2a3a;cursor:pointer;}.tm:hover{border-color:#00e5a0;}
+.vok{color:#00e5a0;font-family:monospace;font-weight:600;}.vno{color:#6b6b85;font-style:italic;}
+.tb{font-size:9px;padding:2px 7px;border-radius:10px;background:#1c1c26;border:1px solid #2a2a3a;color:#6b6b85;white-space:nowrap;}
+.btn-dl{padding:4px 10px;background:transparent;border:1px solid #2a2a3a;border-radius:5px;color:#6b6b85;font-size:13px;cursor:pointer;}
+.btn-dl:hover{border-color:#00e5a0;color:#00e5a0;}
+#res-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#6b6b85;font-size:12px;text-align:center;}
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:20px;}
+#modal.on{display:flex;}
+#modal img{max-width:90vw;max-height:88vh;border-radius:8px;object-fit:contain;}
+#modal-close{position:absolute;top:16px;right:20px;background:#1c1c26;border:1px solid #2a2a3a;border-radius:6px;color:#e8e8f0;padding:6px 14px;cursor:pointer;}
+/* Modal edição manual */
+#modal-edit{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;align-items:center;justify-content:center;padding:20px;}
+#modal-edit.on{display:flex;}
+.edit-box{background:#13131a;border:1px solid #2a2a3a;border-radius:12px;padding:24px;width:100%;max-width:480px;display:flex;flex-direction:column;gap:16px;}
+.edit-box h3{font-size:14px;font-weight:700;color:#e8e8f0;}
+.edit-img{width:100%;max-height:200px;object-fit:contain;border-radius:6px;border:1px solid #2a2a3a;background:#000;}
+.edit-row{display:flex;flex-direction:column;gap:5px;}
+.edit-row label{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#6b6b85;font-weight:700;}
+.edit-row input{background:#0a0a0f;border:1px solid #2a2a3a;border-radius:6px;color:#e8e8f0;padding:8px 10px;font-size:13px;font-family:monospace;outline:none;}
+.edit-row input:focus{border-color:#00e5a0;}
+.edit-row input::placeholder{color:#6b6b85;}
+.edit-btns{display:flex;gap:8px;justify-content:flex-end;}
+.edit-cancel{padding:7px 16px;background:transparent;border:1px solid #2a2a3a;border-radius:6px;color:#6b6b85;cursor:pointer;font-size:12px;}
+.edit-save{padding:7px 16px;background:#00e5a0;border:none;border-radius:6px;color:#000;cursor:pointer;font-size:12px;font-weight:700;}
+.edit-hint{font-size:10px;color:#6b6b85;line-height:1.5;}
+</style>
+</head>
+<body>
+<header><div class="logo">NF</div><h1>Analisador de Nota Fiscal</h1><span class="tag">Múltiplas Notas · Vision API</span></header>
+<div class="tabs">
+  <div class="tab on" onclick="aba('upload')">&#x1F4C2; Upload</div>
+  <div class="tab" id="tab-res" onclick="aba('resultados')">&#x1F4CA; Resultados <span id="res-count" style="display:none;background:#00e5a0;color:#000;border-radius:10px;font-size:9px;padding:1px 6px;margin-left:4px;font-weight:700;"></span></div>
+</div>
+<div class="pane on" id="pane-upload">
+  <div id="drop"><div class="icon">&#x1F9FE;</div><h2>Arraste as notas aqui</h2><p>Selecione uma ou várias imagens.<br>JPG, PNG, WEBP · NF-e, NFC-e, Cupom, RPS, Recibo</p><button class="btn-sel" onclick="fi.click()">Selecionar arquivos</button></div>
+  <div id="fila">
+    <div id="fila-header"><h3 id="fc">0 notas</h3><button class="btn-sm" onclick="fi.click()">+ Adicionar</button><div class="sp"></div><button class="btn-go" id="btn-tudo" onclick="analisarTudo()">&#9654; Analisar todas</button></div>
+    <div id="prog-wrap"><div id="prog-out"><div id="prog-bar"></div></div><div id="prog-txt"></div></div>
+    <div id="lista"></div>
+  </div>
+</div>
+<div class="pane" id="pane-resultados">
+  <div id="res-header"><h3>Resultados</h3><div class="sp"></div>
+    <button class="btn-exp" onclick="exportarCSV()">&#x1F4BE; CSV</button>
+    <button class="btn-exp" onclick="copiarJSON()" style="margin-left:6px;">&#123;&#125; JSON</button>
+    <button class="btn-exp" onclick="baixarTodas()" style="margin-left:6px;">&#11015; Baixar todas</button>
+  </div>
+  <div id="res-empty">&#x1F4CB;<br>Nenhuma nota analisada ainda.</div>
+  <div id="tabela-wrap" style="display:none;">
+    <table><thead><tr><th style="width:50px;">Img</th><th>Arquivo</th><th>Tipo</th><th>Data</th><th>Número</th><th>Valor</th><th>Status</th><th style="width:50px;"></th></tr></thead><tbody id="tbody"></tbody></table>
+  </div>
+</div>
+<div id="modal" onclick="fecharModal()"><button id="modal-close" onclick="fecharModal()">&#10005; Fechar</button><img id="modal-img" src="" alt=""></div>
+<div id="modal-edit">
+  <div class="edit-box">
+    <h3>&#9998; Editar manualmente</h3>
+    <img id="edit-img" class="edit-img" src="" alt="">
+    <div class="edit-hint">O Vision não conseguiu identificar todos os dados. Preencha manualmente o que estiver faltando.</div>
+    <div class="edit-row"><label>Data de emissão</label><input id="edit-data" type="text" placeholder="DD/MM/AAAA"></div>
+    <div class="edit-row"><label>Número da nota</label><input id="edit-num" type="text" placeholder="Ex: 100957 (deixe em branco se não houver)"></div>
+    <div class="edit-row"><label>Valor total</label><input id="edit-val" type="text" placeholder="Ex: R$ 40,00"></div>
+    <div class="edit-btns">
+      <button class="edit-cancel" onclick="fecharEdit()">Cancelar</button>
+      <button class="edit-save" onclick="salvarEdit()">&#10003; Salvar</button>
+    </div>
+  </div>
+</div>
+<input type="file" id="fi" accept="image/*" multiple style="display:none">
+<script>
+
+const VK="AIzaSyCXA7j449mZIjNSyCr_a0OJ0zLk3Q11jIk";
+const N=s=>(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const NS=s=>(s||"").toLowerCase().replace(/[áàâã]/g,"a").replace(/[éê]/g,"e").replace(/[íî]/g,"i").replace(/[óôõ]/g,"o").replace(/[úû]/g,"u").replace(/[ç]/g,"c");
+const MESES={"janeiro":"01","fevereiro":"02","marco":"03","março":"03","abril":"04","maio":"05","junho":"06","julho":"07","agosto":"08","setembro":"09","outubro":"10","novembro":"11","dezembro":"12"};
+function fmtData(s){const p=s.replace(/[\/\-]/g,"/").split("/");if(p.length===3){let[d,m,a]=p;if(a.length===2)a="20"+a;return d.padStart(2,"0")+"/"+m.padStart(2,"0")+"/"+a;}return s;}
+function anoValido(s){try{const p=s.replace(/[\/\-]/g,"/").split("/");const a=parseInt(p[2]||p[0]);return a>=2000&&a<=2030;}catch(e){return false;}}
+
+function extrairPalavras(vr){
+  const out=[];
+  (vr?.fullTextAnnotation?.pages||[]).forEach(pg=>(pg.blocks||[]).forEach(bl=>(bl.paragraphs||[]).forEach(pr=>(pr.words||[]).forEach(wd=>{
+    const t=(wd.symbols||[]).map(s=>s.text).join("");
+    const vs=wd.boundingBox?.vertices||[];
+    if(t.trim()&&vs.length>=4){const xs=vs.map(v=>v.x||0),ys=vs.map(v=>v.y||0);out.push({t,x1:Math.min(...xs),y1:Math.min(...ys),x2:Math.max(...xs),y2:Math.max(...ys)});}
+  }))));
+  return out;
+}
+
+function agruparLinhas(ws){
+  const used=new Set(),ls=[];
+  [...ws].sort((a,b)=>a.y1-b.y1).forEach((w,i)=>{
+    if(used.has(i))return;
+    const l={ws:[w],y1:w.y1,y2:w.y2,x1:w.x1,x2:w.x2};used.add(i);
+    ws.forEach((w2,j)=>{if(used.has(j))return;const alt=((w.y2-w.y1)+(w2.y2-w2.y1))/2;if(Math.abs((w.y1+w.y2)/2-(w2.y1+w2.y2)/2)<alt*.65){l.ws.push(w2);l.y1=Math.min(l.y1,w2.y1);l.y2=Math.max(l.y2,w2.y2);l.x1=Math.min(l.x1,w2.x1);l.x2=Math.max(l.x2,w2.x2);used.add(j);}});
+    l.ws.sort((a,b)=>a.x1-b.x1);l.txt=l.ws.map(w=>w.t).join(" ");ls.push(l);
+  });
+  return ls.sort((a,b)=>a.y1-b.y1);
+}
+
+function extrairData(txt,ws,ls,natH){
+  const reD=/\b(\d{2}[\/\-]\d{2}[\/\-]\d{2,4})\b/;
+  const bad=["validade","vencimento","permanencia","vigencia"];
+  const dataLabels=["dataehora","datadeemissao","dataaut","datadeaut","emissao","emitido","dataemissao","datahora","data:","dataehora"];
+
+  // 1. Linhas com label de data + ano válido
+  for(const l of ls){
+    const n=N(l.txt);
+    if(bad.some(b=>n.includes(b)))continue;
+    if(!dataLabels.some(b=>n.includes(b)))continue;
+    const m=l.txt.match(reD);
+    if(m&&anoValido(m[1])){const w=l.ws.find(w=>reD.test(w.t)&&anoValido(w.t))||l;return{v:fmtData(m[1]),bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}};}
+  }
+  // 2. Parte superior com ano válido
+  for(const l of ls){
+    if(l.y1>natH*.70)continue;
+    if(bad.some(b=>N(l.txt).includes(b)))continue;
+    const m=l.txt.match(reD);
+    if(m&&anoValido(m[1])){const w=l.ws.find(w=>reD.test(w.t)&&anoValido(w.t))||l;return{v:fmtData(m[1]),bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}};}
+  }
+  // 3. Data por extenso no texto bruto
+  const nTxt=NS(txt).replace(/\n/g," ");
+  const mE=nTxt.match(/(\d{1,2})\s+de\s+([a-z]+)\s+(?:de\s+)?(\d{2,4})/);
+  if(mE){const nm=mE[2].substring(0,4);const mes=MESES[mE[2]]||Object.entries(MESES).find(([k])=>k.startsWith(nm))?.[1];if(mes){const ano=mE[3].length===2?"20"+mE[3]:mE[3];if(anoValido("01/01/"+ano)){const lDia=ls.find(l=>/\d{1,2}\s+de\s+[a-záéíóúç]+/i.test(l.txt));const lAno=lDia?ls.slice(ls.indexOf(lDia)).find(l=>/\b\d{4}\b/.test(l.txt)):null;return{v:mE[1].padStart(2,"0")+"/"+mes+"/"+ano,bbox:lDia?{x1:lDia.x1,y1:lDia.y1,x2:lAno?Math.max(lDia.x2,lAno.x2):lDia.x2,y2:lAno?lAno.y2:lDia.y2}:null};}}}
+  // 4. Data fragmentada tipo "Fortaleza, 04 03 2026"
+  for(let i=0;i<ls.length;i++){
+    const l=ls[i];if(!N(l.txt).includes("fortaleza")&&!/\d{1,2}\s+\d{1,2}\s+\d{2,5}/.test(l.txt))continue;
+    const bloco=[l.txt,(ls[i+1]?.txt||"")].join(" ").replace(/\b[1l](20\d{2})\b/g,"$1");
+    const nums=bloco.replace(/[^\d\s]/g," ").trim().split(/\s+/).filter(n=>/^\d+$/.test(n));
+    for(let j=0;j<nums.length-1;j++){const a=nums[j],b=nums[j+1],cc=nums[j+2]||"";
+      if(a.length<=2&&b.length<=2&&(cc.length===4||cc.length===2)){const d=parseInt(a),m=parseInt(b),ano=parseInt(cc.length===2?"20"+cc:cc);
+        if(d>=1&&d<=31&&m>=1&&m<=12&&ano>=2000&&ano<=2030){const lN=ls[i+1];return{v:a.padStart(2,"0")+"/"+b.padStart(2,"0")+"/"+(cc.length===2?"20"+cc:cc),bbox:{x1:l.x1,y1:l.y1,x2:lN?Math.max(l.x2,lN.x2):l.x2,y2:lN?lN.y2:l.y2}};}}}
+  }
+  // 5. Fallback: qualquer data com ano válido
+  for(const l of ls){if(bad.some(b=>N(l.txt).includes(b)))continue;const m=l.txt.match(reD);if(m&&anoValido(m[1])){const w=l.ws.find(w=>reD.test(w.t)&&anoValido(w.t))||l;return{v:fmtData(m[1]),bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}};}}
+  return null;
+}
+
+function extrairNumero(tipo,txt,ws,ls,natH){
+  function okN(t){const d=t.replace(/[^0-9]/g,"");return d.length>=3&&d.length<=15&&d.length!==11&&d.length!==14;}
+  const bad=["cpf","cnpj","cep","protocolo","autorizacao","chavedeacesso","versao","terminal","permanencia","validade","patio","documento:","fone","telefone","tributos","saldo"];
+  if(tipo==="NF-e"||tipo==="NFS-e"){
+    const m=txt.match(/N[º°][.\s]*(\d{3,9})\b/i)||txt.match(/N\.\s*(\d{3,9})\b/i);
+    if(m){const nd=m[1];const w=ws.find(w=>w.t.replace(/[^0-9]/g,"")===nd)||ws.find(w=>w.t.includes(nd)&&w.t.length<=nd.length+3);return{v:nd,bbox:w?{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}:null};}
+    for(const l of ls){if(l.y1>natH*.20)continue;for(const w of l.ws){const d=w.t.replace(/[^0-9]/g,"");if(d.length>=5&&d.length<=9&&d===w.t&&d.length!==11&&d.length!==14)return{v:w.t,bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}};}}
+  }
+  const labels=["rps","nfse","nfs-e","opp","invoice","nfce","nfc-e","extrato","extraton","extraton°"];
+  for(const l of ls){
+    const n=N(l.txt);
+    if(bad.some(b=>n.includes(b)))continue;
+    if(!labels.some(b=>n.includes(b)))continue;
+    const ws2=l.ws.filter(w=>{const d=w.t.replace(/[^0-9]/g,"").length;return d>=3&&d<=15&&d!==11&&d!==14&&/^[\d][\d.\-]*[\d]$/.test(w.t);});
+    if(ws2.length){const w=ws2[0];const vn=w.t.replace(/\./g,"").replace(/^0+/,"");return{v:vn||w.t,bbox:{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}};}
+  }
+  return null;
+}
+
+function extrairValor(tipo,txt,ws,ls){
+  const bad=["identificacao","identificcao","n.identificacao","mov.","saldodevedor","desconto","troco","tributos"];
+  function normV(t){return t.replace(/^R\$\s*/i,"").trim().replace(".",",");}
+  function isOk(t){const v=normV(t);if(!v||v==="0,00"||v==="0.00"||v==="0,0"||v==="0")return false;return /\d+[,.]\d{2}/.test(v)||/^\d{1,6}$/.test(v);}
+  function achVal(l){
+    for(let i=0;i<l.ws.length-1;i++){if(/^R\$$/i.test(l.ws[i].t)){const n=l.ws[i+1];if(/\d/.test(n.t)&&isOk(n.t)){const a=l.ws[i];return{v:"R$ "+normV(n.t),bbox:{x1:a.x1,y1:Math.min(a.y1,n.y1),x2:n.x2,y2:Math.max(a.y2,n.y2)}};}}}
+    const w1=l.ws.find(w=>/^R\$\d/.test(w.t));if(w1)return{v:"R$ "+normV(w1.t.replace(/^R\$/i,"")),bbox:{x1:w1.x1,y1:w1.y1,x2:w1.x2,y2:w1.y2}};
+    const w2=l.ws.find(w=>/^\d+[,.]\d{2}$/.test(w.t)&&isOk(w.t));if(w2)return{v:"R$ "+normV(w2.t),bbox:{x1:w2.x1,y1:w2.y1,x2:w2.x2,y2:w2.y2}};
+    return null;
+  }
+  if(tipo==="NF-e"||tipo==="NFS-e"){
+    const m=txt.match(/[Vv][\s.]*[Tt]otal[\s\S]{0,40}?([\d]{1,3}(?:[.,][\d]{3})*[.,][\d]{2})/);
+    if(m){const vStr=m[1],vNum=parseFloat(vStr.replace(/\./g,"").replace(",","."));if(vNum>0){const w=ws.find(w=>w.t.replace(/[^0-9]/g,"")===vStr.replace(/[^0-9]/g,""));return{v:"R$ "+vStr,bbox:w?{x1:w.x1,y1:w.y1,x2:w.x2,y2:w.y2}:null};}}
+    for(let i=0;i<ls.length;i++){if(!["vtotaldanota","totaldanota","valortotaldanota","vnf"].some(l=>N(ls[i].txt).includes(l)))continue;for(let d=0;d<=3;d++){const s=ls[i+d];if(!s)continue;const v=achVal(s);if(v&&!v.v.includes("0,00"))return v;}}
+  }
+  // Labels de valor (todos os tipos)
+  const labV=["valortotal","totalapagar","valorapagar","valorporpagar","valortotaldaos","totaldaos","totalpago","totalvenda","totaldavenda","apagar","valor:","valors","ticketpago","total:","quantia","valorpago","valortotaldaos"];
+  for(let i=0;i<ls.length;i++){
+    const l=ls[i],n=N(l.txt);
+    if(bad.some(b=>n.includes(b)))continue;
+    const tem=labV.some(b=>n.includes(b));
+    for(const s of(tem?[l,ls[i+1]].filter(Boolean):[l])){
+      if(!s||bad.some(b=>N(s.txt).includes(b)))continue;
+      const v=achVal(s);if(v&&tem)return v;
+    }
+  }
+  // R$ isolado → próxima linha
+  for(let i=0;i<ls.length;i++){
+    const l=ls[i];
+    if(/^R\$$/.test(l.txt.trim())&&ls[i+1]){const nx=ls[i+1];const m=nx.txt.trim().match(/^(\d+[,.]?\d*)$/);if(m&&parseFloat(m[1].replace(",","."))>0){const v=m[1].includes(",")||m[1].includes(".")?m[1]:m[1]+",00";return{v:"R$ "+v,bbox:{x1:Math.min(l.x1,nx.x1),y1:l.y1,x2:Math.max(l.x2,nx.x2),y2:nx.y2}};}}
+    for(let wi=0;wi<l.ws.length-1;wi++){if(/^R\$$/i.test(l.ws[wi].t)&&/^\d+$/.test(l.ws[wi+1]?.t||"")){const b2=l.ws[wi+1];if(parseInt(b2.t)>0)return{v:"R$ "+b2.t+",00",bbox:{x1:l.ws[wi].x1,y1:Math.min(l.ws[wi].y1,b2.y1),x2:b2.x2,y2:Math.max(l.ws[wi].y2,b2.y2)}};}}
+  }
+  // Fallback geral
+  for(const l of ls){if(bad.some(b=>N(l.txt).includes(b)))continue;const v=achVal(l);if(v)return v;}
+  return null;
+}
+
+function detectarTipo(nt){
+  if(nt.includes("nfce")||nt.includes("notafiscaldeconsumidor"))return "NFC-e";
+  if(nt.includes("danfe")||nt.includes("notafiscaleletronica"))return "NF-e";
+  if(nt.includes("nfse")||nt.includes("notafiscaldeservicos"))return "NFS-e";
+  if(nt.includes("rps")||nt.includes("reciboprovisorio"))return "RPS";
+  if(nt.includes("cupomfiscal"))return "Cupom Fiscal";
+  if(nt.includes("comprovantevenda")||nt.includes("comprovante"))return "Comprovante";
+  if(nt.includes("recibo"))return "Recibo";
+  return "Documento Fiscal";
+}
+
+function gerarThumbMarcado(src,r,cb){
+  if(!r||(!r.dataBbox&&!r.numeroBbox&&!r.valorBbox)){cb(src);return;}
+  const img=new Image();
+  img.onload=()=>{
+    const cv2=document.createElement("canvas");cv2.width=img.naturalWidth;cv2.height=img.naturalHeight;
+    const cx=cv2.getContext("2d");cx.drawImage(img,0,0);
+    [{bbox:r.dataBbox,cor:"#00e5a0"},{bbox:r.numeroBbox,cor:"#7b5cff"},{bbox:r.valorBbox,cor:"#ff6b35"}]
+    .forEach(({bbox,cor})=>{
+      if(!bbox)return;
+      const{x1,y1,x2,y2}=bbox,w=x2-x1,h=y2-y1,p=Math.max(2,h*.12);
+      cx.save();cx.globalCompositeOperation="multiply";cx.fillStyle=cor+"CC";
+      cx.beginPath();cx.roundRect(x1-p,y1-p,w+p*2,h+p*2,3);cx.fill();
+      cx.globalCompositeOperation="source-over";cx.strokeStyle=cor;cx.lineWidth=Math.max(1.5,img.naturalWidth*.002);
+      cx.beginPath();cx.roundRect(x1-p,y1-p,w+p*2,h+p*2,3);cx.stroke();cx.restore();
+    });
+    cb(cv2.toDataURL("image/jpeg",.92));
+  };
+  img.src=src;
+}
+
+
+let notas=[];
+const drop=document.getElementById("drop"),filaEl=document.getElementById("fila"),
+  listaEl=document.getElementById("lista"),fc=document.getElementById("fc"),
+  btnTudo=document.getElementById("btn-tudo"),progWrap=document.getElementById("prog-wrap"),
+  progBar=document.getElementById("prog-bar"),progTxt=document.getElementById("prog-txt"),
+  tbody=document.getElementById("tbody"),tabWrap=document.getElementById("tabela-wrap"),
+  resEmpty=document.getElementById("res-empty"),resCount=document.getElementById("res-count"),
+  fi=document.getElementById("fi");
+
+drop.ondragover=e=>{e.preventDefault();drop.classList.add("over");};
+drop.ondragleave=()=>drop.classList.remove("over");
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove("over");addFiles(e.dataTransfer.files);};
+fi.onchange=e=>{addFiles(e.target.files);fi.value="";};
+
+function aba(id){
+  document.querySelectorAll(".tab").forEach((t,i)=>t.classList.toggle("on",["upload","resultados"][i]===id));
+  document.querySelectorAll(".pane").forEach((p,i)=>p.classList.toggle("on",["pane-upload","pane-resultados"][i]==="pane-"+id));
+}
+
+function addFiles(files){
+  const arr=Array.from(files).filter(f=>f.type.startsWith("image/"));
+  if(!arr.length)return;
+  Promise.all(arr.map(f=>new Promise(res=>{
+    const r=new FileReader();r.onload=ev=>{notas.push({id:Date.now()+Math.random(),nome:f.name,b64:ev.target.result.split(",")[1],mime:f.type||"image/jpeg",thumb:ev.target.result,status:"wait",res:null,erro:null,_thumb:null});res();};r.readAsDataURL(f);
+  }))).then(()=>{renderFila();drop.style.display="none";filaEl.style.display="flex";});
+}
+
+function renderFila(){
+  fc.textContent=notas.length+" nota"+(notas.length!==1?"s":"");
+  listaEl.innerHTML="";
+  notas.forEach(n=>{
+    const el=document.createElement("div");el.className="ni";el.id="ni-"+n.id;
+    el.innerHTML='<img class="ni-thumb" src="'+n.thumb+'"><div class="ni-info"><div class="ni-nome">'+n.nome+'</div><div class="ni-st" id="ns-'+n.id+'">'+badgeHTML(n)+'</div></div><button class="ni-rm" onclick="remover(\''+n.id+'\')">&#10005;</button>';
+    listaEl.appendChild(el);
+  });
+  btnTudo.disabled=notas.length===0||notas.some(n=>n.status==="proc");
+}
+function badgeHTML(n){
+  if(n.status==="wait")return '<span class="badge wait">aguardando</span>';
+  if(n.status==="proc")return '<span class="badge proc"><span class="spin-s"></span> processando...</span>';
+  if(n.status==="ok")return '<span class="badge ok">✓ concluído</span>';
+  return '<span class="badge err">✗ erro</span>';
+}
+function remover(id){notas=notas.filter(n=>n.id!=id);if(!notas.length){drop.style.display="flex";filaEl.style.display="none";}else renderFila();}
+function atualizarBadge(n){const el=document.getElementById("ns-"+n.id);if(el)el.innerHTML=badgeHTML(n);}
+
+async function analisarTudo(){
+  btnTudo.disabled=true;progWrap.style.display="block";
+  notas.forEach(n=>{n.status="wait";n.res=null;n.erro=null;n._thumb=null;});
+  for(let i=0;i<notas.length;i++){
+    const n=notas[i];n.status="proc";atualizarBadge(n);
+    progBar.style.width=Math.round(i/notas.length*100)+"%";
+    progTxt.textContent="Processando "+(i+1)+" de "+notas.length+": "+n.nome;
+    try{n.res=await analisarNota(n.b64,n.mime);n.status="ok";}catch(e){n.erro=e.message;n.status="err";}
+    atualizarBadge(n);
+  }
+  progBar.style.width="100%";progTxt.textContent="Concluído! "+notas.filter(n=>n.status==="ok").length+" de "+notas.length;
+  btnTudo.disabled=false;
+  const ok=notas.filter(n=>n.status==="ok").length;
+  resCount.textContent=ok;resCount.style.display="inline";
+  renderTabela();
+}
+
+async function analisarNota(b64,mime){
+  // PASSO 1: Google Vision — OCR com coordenadas reais
+  const vr=await fetch("https://vision.googleapis.com/v1/images:annotate?key="+VK,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({requests:[{image:{content:b64},features:[{type:"DOCUMENT_TEXT_DETECTION"}]}]})}).then(r=>{if(!r.ok)throw new Error("Vision HTTP "+r.status);return r.json();}).then(j=>j.responses?.[0]);
+  const txt=vr?.fullTextAnnotation?.text||"";
+  const ws=extrairPalavras(vr);const ls=agruparLinhas(ws);
+  if(!ws.length)throw new Error("Texto não detectado");
+  const natH=Math.max(...ws.map(w=>w.y2),1);
+  const tipo=detectarTipo(N(txt));
+
+  // PASSO 2: extração local por padrões
+  const dataR=extrairData(txt,ws,ls,natH);
+  const numR=extrairNumero(tipo,txt,ws,ls,natH);
+  const valR=extrairValor(tipo,txt,ws,ls);
+
+  // PASSO 3: se algum campo crítico falhou, usa Claude Vision com a imagem
+  const camposFaltando=!dataR||!valR;
+  let claudeData=null,claudeNumero=null,claudeValor=null;
+  if(camposFaltando){
+    try{
+      const cr=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          model:"claude-sonnet-4-20250514",
+          max_tokens:300,
+          messages:[{role:"user",content:[
+            {type:"image",source:{type:"base64",media_type:mime,data:b64}},
+            {type:"text",text:`Este é um documento fiscal brasileiro, possivelmente com texto manuscrito.
+Extraia com precisão:
+1. DATA de emissão (formato DD/MM/AAAA)
+2. NÚMERO da nota/recibo (se existir)
+3. VALOR TOTAL pago em reais
+
+Responda SOMENTE com JSON sem markdown:
+{"data":"DD/MM/AAAA","numero":"X","valor":"R$ X,XX","data_ok":true,"numero_ok":false,"valor_ok":true}
+Use null/false se não encontrar.`}
+          ]}]
+        })
+      });
+      if(cr.ok){
+        const cj=await cr.json();
+        const ct=JSON.parse((cj.content?.[0]?.text||"").replace(/```json|```/g,"").trim());
+        if(ct.data_ok&&ct.data) claudeData=ct.data;
+        if(ct.numero_ok&&ct.numero) claudeNumero=ct.numero;
+        if(ct.valor_ok&&ct.valor) claudeValor=ct.valor;
+      }
+    }catch(e){console.warn("Claude Vision falhou:",e.message);}
+  }
+
+  // Mescla: coordenadas do Vision + valores do Claude
+  return{
+    tipo,
+    data:   dataR?.v  || claudeData   || null,
+    numero: numR?.v   || claudeNumero || null,
+    valor:  valR?.v   || claudeValor  || null,
+    dataBbox:   dataR?.bbox   || null,
+    numeroBbox: numR?.bbox    || null,
+    valorBbox:  valR?.bbox    || null,
+    imgW:Math.max(...ws.map(w=>w.x2),1),imgH:natH
+  };
+}
+
+function renderTabela(){
+  tbody.innerHTML="";
+  const com=notas.filter(n=>n.status==="ok"||n.status==="err");
+  if(!com.length){tabWrap.style.display="none";resEmpty.style.display="flex";return;}
+  tabWrap.style.display="block";resEmpty.style.display="none";
+  com.forEach((n,i)=>{
+    const tr=document.createElement("tr");
+    if(n.status==="ok"){
+      const r=n.res;
+      tr.innerHTML='<td id="td-'+i+'"><img class="tm" src="'+n.thumb+'" title="Clique para ver"></td>'
+        +'<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+n.nome+'">'+n.nome+'</td>'
+        +'<td><span class="tb">'+r.tipo+'</span></td>'
+        +'<td class="'+(r.data?"vok":"vno")+'">'+(r.data||"—")+'</td>'
+        +'<td class="'+(r.numero?"vok":"vno")+'">'+(r.numero||"—")+'</td>'
+        +'<td class="'+(r.valor?"vok":"vno")+'">'+(r.valor||"—")+'</td>'
+        +'<td><span class="badge ok">✓ ok</span></td>'
+        +'<td style="display:flex;gap:4px;"><button class="btn-dl" id="dl-'+i+'" title="Baixar">&#11015;</button><button class="btn-dl" id="ed-'+i+'" title="Editar manualmente" style="font-size:11px;">&#9998;</button></td>';
+      tbody.appendChild(tr);
+      // Gera thumb marcado
+      (function(nota,idx){
+        gerarThumbMarcado(nota.thumb,nota.res,function(url){
+          nota._thumb=url;
+          const td=document.getElementById("td-"+idx);
+          if(td){const img=td.querySelector("img");if(img){img.src=url;img.onclick=function(){verModal(url);};}}
+          const dlBtn=document.getElementById("dl-"+idx);
+          if(dlBtn)dlBtn.onclick=function(){baixar(url,nota.nome);};
+          const edBtn=document.getElementById("ed-"+idx);
+          if(edBtn)edBtn.onclick=function(){abrirEdit(nota,idx);};
+        });
+      })(n,i);
+    }else{
+      tr.innerHTML='<td><img class="tm" src="'+n.thumb+'"></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+n.nome+'</td><td>—</td><td>—</td><td>—</td><td style="color:#ff6b35;font-size:11px;">'+(n.erro||"Erro").substring(0,30)+'</td><td><span class="badge err">✗ erro</span></td><td></td>';
+      tbody.appendChild(tr);
+    }
+  });
+  aba("resultados");
+}
+
+function verModal(url){document.getElementById("modal-img").src=url;document.getElementById("modal").classList.add("on");}
+function fecharModal(){document.getElementById("modal").classList.remove("on");document.getElementById("modal-img").src="";}
+
+function baixar(url,nome){
+  const a=document.createElement("a");a.href=url;
+  a.download=(nome.replace(/\.[^.]+$/,"")||"nota")+"_anotada.jpg";
+  document.body.appendChild(a);a.click();a.remove();
+}
+
+let _editNota=null, _editIdx=null;
+function abrirEdit(nota, idx){
+  _editNota=nota; _editIdx=idx;
+  document.getElementById("edit-img").src=nota.thumb;
+  document.getElementById("edit-data").value=nota.res?.data||"";
+  document.getElementById("edit-num").value=nota.res?.numero||"";
+  document.getElementById("edit-val").value=nota.res?.valor||"";
+  document.getElementById("modal-edit").classList.add("on");
+}
+function fecharEdit(){document.getElementById("modal-edit").classList.remove("on");_editNota=null;_editIdx=null;}
+function salvarEdit(){
+  if(!_editNota)return;
+  const data=document.getElementById("edit-data").value.trim();
+  const num=document.getElementById("edit-num").value.trim();
+  const val=document.getElementById("edit-val").value.trim();
+  _editNota.res.data=data||_editNota.res.data;
+  _editNota.res.numero=num||_editNota.res.numero;
+  _editNota.res.valor=val||_editNota.res.valor;
+  // Atualiza a linha da tabela
+  const tr=document.getElementById("td-"+_editIdx)?.closest("tr");
+  if(tr){
+    const tds=tr.querySelectorAll("td");
+    if(tds[3])tds[3].textContent=_editNota.res.data||"—";
+    if(tds[4])tds[4].textContent=_editNota.res.numero||"—";
+    if(tds[5])tds[5].textContent=_editNota.res.valor||"—";
+    [3,4,5].forEach(i=>{if(tds[i])tds[i].className=tds[i].textContent!=="—"?"vok":"vno";});
+  }
+  fecharEdit();
+}
+
+async function baixarTodas(){
+  const ok=notas.filter(n=>n.status==="ok");
+  if(!ok.length){alert("Nenhuma nota processada.");return;}
+  for(const n of ok){
+    await new Promise(function(resolve){
+      function dl(url){baixar(url,n.nome);setTimeout(resolve,500);}
+      if(n._thumb)dl(n._thumb);else gerarThumbMarcado(n.thumb,n.res,dl);
+    });
+  }
+}
+
+function exportarCSV(){
+  const ok=notas.filter(n=>n.status==="ok");if(!ok.length)return;
+  const csv=[["Arquivo","Tipo","Data","Número","Valor"],...ok.map(n=>[n.nome,n.res.tipo||"",n.res.data||"",n.res.numero||"",n.res.valor||""])].map(l=>l.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"}));a.download="notas_fiscais.csv";a.click();
+}
+function copiarJSON(){
+  navigator.clipboard.writeText(JSON.stringify(notas.filter(n=>n.status==="ok").map(n=>({arquivo:n.nome,...n.res})),null,2)).then(()=>alert("JSON copiado!"));
+}
+</script>
+</body>
+</html>
