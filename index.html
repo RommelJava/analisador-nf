@@ -85,9 +85,9 @@ td{padding:9px 14px;border-bottom:1px solid #1c1c26;vertical-align:middle;}tr:ho
   <div class="tab" id="tab-res" onclick="aba('resultados')">&#x1F4CA; Resultados <span id="res-count" style="display:none;background:#00e5a0;color:#000;border-radius:10px;font-size:9px;padding:1px 6px;margin-left:4px;font-weight:700;"></span></div>
 </div>
 <div class="pane on" id="pane-upload">
-  <div id="drop"><div class="icon">&#x1F9FE;</div><h2>Arraste as notas aqui</h2><p>Selecione uma ou várias imagens.<br>JPG, PNG, WEBP · NF-e, NFC-e, Cupom, RPS, Recibo</p><button class="btn-sel" onclick="fi.click()">Selecionar arquivos</button></div>
+  <div id="drop"><div class="icon">&#x1F9FE;</div><h2>Arraste as notas aqui</h2><p>Selecione uma ou várias imagens.<br>JPG, PNG, WEBP · NF-e, NFC-e, Cupom, RPS, Recibo</p><button class="btn-sel" onclick="event.stopPropagation();fi.click()">Selecionar arquivos</button></div>
   <div id="fila">
-    <div id="fila-header"><h3 id="fc">0 notas</h3><button class="btn-sm" onclick="fi.click()">+ Adicionar</button><div class="sp"></div><button class="btn-go" id="btn-tudo" onclick="analisarTudo()">&#9654; Analisar todas</button></div>
+    <div id="fila-header"><h3 id="fc">0 notas</h3><button class="btn-sm" onclick="event.stopPropagation();fi.click()">+ Adicionar</button><div class="sp"></div><button class="btn-go" id="btn-tudo" onclick="analisarTudo()">&#9654; Analisar todas</button></div>
     <div id="prog-wrap"><div id="prog-out"><div id="prog-bar"></div></div><div id="prog-txt"></div></div>
     <div id="lista"></div>
   </div>
@@ -286,6 +286,7 @@ const drop=document.getElementById("drop"),filaEl=document.getElementById("fila"
   fi=document.getElementById("fi");
 
 drop.ondragover=e=>{e.preventDefault();drop.classList.add("over");};
+drop.onclick=e=>{if(e.target===drop||e.target.tagName==="H2"||e.target.tagName==="P"||e.target.classList.contains("icon"))fi.click();};
 drop.ondragleave=()=>drop.classList.remove("over");
 drop.ondrop=e=>{e.preventDefault();drop.classList.remove("over");addFiles(e.dataTransfer.files);};
 fi.onchange=e=>{addFiles(e.target.files);fi.value="";};
@@ -372,18 +373,27 @@ async function analisarNota(b64,mime){
           max_tokens:300,
           messages:[{role:"user",content:[
             {type:"image",source:{type:"base64",media_type:mime,data:b64}},
-            {type:"text",text:`Este é um documento fiscal brasileiro com possível texto manuscrito.
+            {type:"text",text:`Você é um especialista em documentos fiscais brasileiros.
 
-Analise a imagem com MUITO cuidado e extraia:
-1. DATA de emissão (formato DD/MM/AAAA) - pode estar por extenso ex: "07 de maio de 2026"
-2. NÚMERO da nota/recibo (apenas se existir explicitamente)
-3. VALOR TOTAL em reais - preste atenção especial: dígitos manuscritos cursivos como "1" podem parecer "4" ou "7". Leia devagar cada dígito. O valor geralmente aparece após "R$".
+TEXTO EXTRAÍDO PELO OCR (pode ter erros de leitura):
+${txt}
 
-ATENÇÃO para valores manuscritos: o primeiro dígito "1" em cursivo parece uma vogal ou "4". Sempre verifique o contexto — um estacionamento raramente cobra R$ 42, mas pode cobrar R$ 12.
+Analise a IMAGEM e corrija os erros do OCR seguindo estas regras:
 
-Responda SOMENTE com JSON sem markdown:
+DATA: formato DD/MM/AAAA. Pode ser por extenso ("07 de maio de 2026"). Apenas anos 2000-2030.
+
+VALOR: Leia o campo após "R$" na imagem com muita atenção. Em manuscrito cursivo:
+- "1" pode parecer "4", "7" ou uma letra
+- "2" pode parecer "Z"
+- Verifique o contexto: estacionamento cobra tipicamente R$ 8 a R$ 80
+
+NÚMERO DA NOTA: Apenas se houver campo específico "NF n°", "RPS", "NFC-e n°", "Extrato N°".
+NÃO use: CNPJ, CPF, telefone, protocolo de autorização, chave de acesso, código de barras.
+Para NFC-e: o número está no campo "NFC-e n°" — é um número CURTO (3-6 dígitos), não o protocolo longo.
+
+Responda SOMENTE com JSON puro sem markdown:
 {"data":"DD/MM/AAAA","numero":"X","valor":"R$ X,XX","data_ok":true,"numero_ok":false,"valor_ok":true}
-Use null/false se não encontrar.`}
+Use null e false para campos não encontrados.\`}
           ]}]
         })
       });
