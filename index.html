@@ -344,19 +344,25 @@ window.addEventListener("DOMContentLoaded", function() {
             messages:[{role:"user",content:[
               {type:"image",source:{type:"base64",media_type:mime,data:b64}},
               {type:"text",text:
-                "Voce e especialista em documentos fiscais brasileiros. Analise a imagem com cuidado.\n\n" +
+                "Voce e especialista em documentos fiscais brasileiros. Analise a imagem com MUITO cuidado.\n\n" +
                 "Tipo detectado: " + tipo + "\n\n" +
-                "1. DATA: formato DD/MM/AAAA. Se por extenso (07 de maio de 2026 = 07/05/2026). Ano entre 2000-2030.\n" +
-                "2. NUMERO do documento:\n" +
-                "   - NF-e / DANFE: campo 'Nº' ou 'Número' no canto superior direito (ex: 219340)\n" +
-                "   - NFC-e: campo 'CCF', 'COO', 'Nº' ou número de ordem da nota (ex: 2326)\n" +
-                "   - Documento Fiscal impresso: campo 'Doc. Nº', 'Nº do Documento' ou similar\n" +
-                "   - Recibo/RPS: campo 'RPS Nº', 'Recibo Nº', 'Nº' explícito\n" +
-                "   - NAO use: CNPJ, CPF, CEP, código de barras, chave de acesso, protocolo, ticket, controle\n" +
-                "   - Se nao houver número explícito, retorne null\n" +
-                "3. VALOR: valor total pago. Após R$. Manuscrito: digito 1 parece 4.\n\n" +
+                "1. DATA: formato DD/MM/AAAA. Se por extenso (ex: 07 de maio de 2026 = 07/05/2026). Ano entre 2000-2030.\n" +
+                "   - Manuscrito: '1' pode parecer '4', '2' pode parecer '7', '0' pode parecer 'O'\n" +
+                "   - Procure padrão DD/MM/AAAA ou DD . MM . AAAA\n\n" +
+                "2. NUMERO do documento (retorne null se nao houver campo explícito):\n" +
+                "   - NF-e / DANFE: campo 'Nº' ou 'Número' no canto superior direito\n" +
+                "   - NFC-e: campo 'CCF', 'COO' ou 'Nº' da nota\n" +
+                "   - Documento Fiscal: campo 'Doc. Nº' ou 'Nº do Documento'\n" +
+                "   - Recibo manuscrito: geralmente NAO tem número — retorne null\n" +
+                "   - NUNCA use: CNPJ, CPF, CEP, código de barras, chave de acesso, fone, placa\n\n" +
+                "3. VALOR TOTAL PAGO (campo R$):\n" +
+                "   - Leia o número escrito após 'R$' na linha correspondente\n" +
+                "   - Manuscrito com marca-texto amarelo: leia com cuidado cada dígito\n" +
+                "   - '4' pode parecer 'H' ou 'h', '0' pode parecer 'O', '1' pode parecer 'l'\n" +
+                "   - Use contexto: recibo de estacionamento, serviço, compra — qualquer valor é possível\n" +
+                "   - Retorne no formato 'R$ X,XX' com vírgula decimal\n\n" +
                 "Responda SOMENTE JSON puro sem markdown:\n" +
-                "{\"data\":\"DD/MM/AAAA ou null\",\"numero\":\"string ou null\",\"valor\":\"R$ X,XX ou null\",\"data_ok\":bool,\"numero_ok\":bool,\"valor_ok\":bool}"
+                "{\"data\":\"DD/MM/AAAA\",\"numero\":null,\"valor\":\"R$ X,XX\",\"data_ok\":true,\"numero_ok\":false,\"valor_ok\":true}"
               }
             ]}]
           })
@@ -507,14 +513,47 @@ window.addEventListener("DOMContentLoaded", function() {
   function extVal(tipo,txt,ws,ls){
     var bad=["identificacao","mov.","saldodevedor","desconto","troco","tributos"];
     function nV(t){return t.replace(/^R\$\s*/i,"").trim().replace(".",",");}
-    function isOk(t){var v=nV(t);if(!v||v==="0,00"||v==="0.00"||v==="0")return false;return /\d+[,.]\d{2}/.test(v)||/^\d{1,6}$/.test(v);}
+    // Limpeza de OCR corrompido: substitui letras comuns por dígitos em contexto numérico
+    function fixOCR(t){return t.replace(/[OoQq]/g,"0").replace(/[lIi|]/g,"1").replace(/[Ss]/g,"5").replace(/[Gg]/g,"9").replace(/[Hh]/g,"4");}
+    function isOk(t){
+      var v=nV(fixOCR(t));
+      if(!v||v==="0,00"||v==="0.00"||v==="0")return false;
+      return /\d+[,.]\d{2}/.test(v)||/^\d{1,6}$/.test(v);
+    }
+    function parseVal(t){
+      // tenta extrair valor monetário mesmo com OCR corrompido
+      var limpo=fixOCR(t).replace(/^R\$\s*/i,"").trim();
+      // normaliza separadores
+      limpo=limpo.replace(/\./g,",");
+      if(/^\d+,\d{2}$/.test(limpo)) return "R$ "+limpo;
+      if(/^\d+$/.test(limpo)&&parseInt(limpo)>0) return "R$ "+limpo+",00";
+      return null;
+    }
     function aV(l){
       var i,n,a;
-      for(i=0;i<l.ws.length-1;i++){if(/^R\$$/i.test(l.ws[i].t)){n=l.ws[i+1];if(n&&/\d/.test(n.t)&&isOk(n.t)){a=l.ws[i];return{v:"R$ "+nV(n.t),bbox:{x1:a.x1,y1:Math.min(a.y1,n.y1),x2:n.x2,y2:Math.max(a.y2,n.y2)}};}}}
-      var w1=l.ws.find(function(w){return /^R\$\d/.test(w.t);});
-      if(w1)return{v:"R$ "+nV(w1.t.replace(/^R\$/i,"")),bbox:{x1:w1.x1,y1:w1.y1,x2:w1.x2,y2:w1.y2}};
-      var w2=l.ws.find(function(w){return /^\d+[,.]\d{2}$/.test(w.t)&&isOk(w.t);});
-      if(w2)return{v:"R$ "+nV(w2.t),bbox:{x1:w2.x1,y1:w2.y1,x2:w2.x2,y2:w2.y2}};
+      for(i=0;i<l.ws.length-1;i++){
+        if(/^R\$$/i.test(l.ws[i].t)){
+          n=l.ws[i+1];
+          if(n&&/\d/.test(fixOCR(n.t))&&isOk(n.t)){
+            a=l.ws[i];
+            var pv=parseVal(n.t)||("R$ "+nV(n.t));
+            return{v:pv,bbox:{x1:a.x1,y1:Math.min(a.y1,n.y1),x2:n.x2,y2:Math.max(a.y2,n.y2)}};
+          }
+          // token corrompido: tenta fixOCR
+          if(n){
+            var nFixed=fixOCR(n.t);
+            if(/\d/.test(nFixed)&&isOk(nFixed)){
+              a=l.ws[i];
+              var pv2=parseVal(nFixed)||("R$ "+nV(nFixed));
+              return{v:pv2,bbox:{x1:a.x1,y1:Math.min(a.y1,n.y1),x2:n.x2,y2:Math.max(a.y2,n.y2)}};
+            }
+          }
+        }
+      }
+      var w1=l.ws.find(function(w){return /^R\$\d/.test(w.t)||/^R\$[A-Z0-9]/.test(w.t);});
+      if(w1){var pv3=parseVal(w1.t.replace(/^R\$/i,""))||("R$ "+nV(w1.t.replace(/^R\$/i,"")));return{v:pv3,bbox:{x1:w1.x1,y1:w1.y1,x2:w1.x2,y2:w1.y2}};}
+      var w2=l.ws.find(function(w){return /^\d+[,.]\d{2}$/.test(fixOCR(w.t))&&isOk(w.t);});
+      if(w2){var pv4=parseVal(w2.t)||("R$ "+nV(w2.t));return{v:pv4,bbox:{x1:w2.x1,y1:w2.y1,x2:w2.x2,y2:w2.y2}};}
       return null;
     }
     var i,l,n,v,m;
