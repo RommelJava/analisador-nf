@@ -382,12 +382,12 @@ window.addEventListener("DOMContentLoaded", function() {
             "anthropic-dangerous-direct-browser-access":"true"
           },
           body: JSON.stringify({
-            model:"claude-haiku-4-5-20251001",
-            max_tokens:200,
+            model:"claude-sonnet-4-20250514",
+            max_tokens:300,
             messages:[{role:"user",content:[
               {type:"image",source:{type:"base64",media_type:mime,data:b64}},
-              {type:"text",text:"Documento fiscal brasileiro. Extraia: DATA (DD/MM/AAAA), NUMERO da nota (so campos NF n, RPS, NFC-e n, Extrato N - NAO use Ticket, Seq, Controle, codigos com letras), VALOR TOTAL (campo R$). JSON puro sem markdown: {\"data\":\"DD/MM/AAAA\",\"numero\":\"X\",\"valor\":\"R$ X,XX\",\"data_ok\":true,\"numero_ok\":false,\"valor_ok\":true}"}
-            ]}]
+              {type:"text",text:"Voce e especialista em documentos fiscais brasileiros. Analise a imagem com MUITO cuidado.\n\n1. DATA: formato DD/MM/AAAA. Se por extenso (07 de maio de 2026 = 07/05/2026). Ano entre 2000-2030.\n2. NUMERO: SOMENTE campo explicito NF n, RPS, NFC-e n, Extrato N. NAO use Ticket, Seq, Controle.\n3. VALOR: leia apos R$. Manuscrito: digito 1 parece 4. Estacionamento cobra R$ 8 a R$ 80.\n\nJSON puro: {\"data\":\"DD/MM/AAAA\",\"numero\":null,\"valor\":\"R$ X,XX\",\"data_ok\":true,\"numero_ok\":false,\"valor_ok\":true}"
+}            ]}]
           })
         });
         if (cr.ok) {
