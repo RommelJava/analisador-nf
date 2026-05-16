@@ -353,8 +353,9 @@ async function analisarNota(b64,mime){
   const numR=extrairNumero(tipo,txt,ws,ls,natH);
   const valR=extrairValor(tipo,txt,ws,ls);
 
-  // PASSO 3: se algum campo crítico falhou, usa Claude Vision com a imagem
-  const camposFaltando=!dataR||!valR;
+  // PASSO 3: Claude Vision sempre para Recibos manuscritos, ou quando faltam campos
+  const ehManuscrito=tipo==="Recibo"||tipo==="Documento Fiscal";
+  const camposFaltando=!dataR||!valR||ehManuscrito;
   let claudeData=null,claudeNumero=null,claudeValor=null;
   if(camposFaltando){
     try{
@@ -371,11 +372,14 @@ async function analisarNota(b64,mime){
           max_tokens:300,
           messages:[{role:"user",content:[
             {type:"image",source:{type:"base64",media_type:mime,data:b64}},
-            {type:"text",text:`Este é um documento fiscal brasileiro, possivelmente com texto manuscrito.
-Extraia com precisão:
-1. DATA de emissão (formato DD/MM/AAAA)
-2. NÚMERO da nota/recibo (se existir)
-3. VALOR TOTAL pago em reais
+            {type:"text",text:`Este é um documento fiscal brasileiro com possível texto manuscrito.
+
+Analise a imagem com MUITO cuidado e extraia:
+1. DATA de emissão (formato DD/MM/AAAA) - pode estar por extenso ex: "07 de maio de 2026"
+2. NÚMERO da nota/recibo (apenas se existir explicitamente)
+3. VALOR TOTAL em reais - preste atenção especial: dígitos manuscritos cursivos como "1" podem parecer "4" ou "7". Leia devagar cada dígito. O valor geralmente aparece após "R$".
+
+ATENÇÃO para valores manuscritos: o primeiro dígito "1" em cursivo parece uma vogal ou "4". Sempre verifique o contexto — um estacionamento raramente cobra R$ 42, mas pode cobrar R$ 12.
 
 Responda SOMENTE com JSON sem markdown:
 {"data":"DD/MM/AAAA","numero":"X","valor":"R$ X,XX","data_ok":true,"numero_ok":false,"valor_ok":true}
