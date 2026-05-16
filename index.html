@@ -223,7 +223,12 @@ function renderFila() {
     var el = document.createElement("div");
     el.className = "ni";
     el.id = "ni-" + n.id;
-    el.innerHTML = '<img src="' + n.thumb + '"><div class="ni-info"><div class="ni-nome">' + n.nome + '</div><div class="ni-st" id="ns-' + n.id + '">' + badgeHTML(n) + '</div></div><button class="ni-rm" onclick="remover('' + n.id + '')">&#10005;</button>';
+    el.innerHTML = '<img src="' + n.thumb + '"><div class="ni-info"><div class="ni-nome">' + n.nome + '</div><div class="ni-st" id="ns-' + n.id + '">' + badgeHTML(n) + '</div></div>';
+    var rmBtn = document.createElement("button");
+    rmBtn.className = "ni-rm";
+    rmBtn.innerHTML = "&#10005;";
+    (function(nid){ rmBtn.addEventListener("click", function(){ remover(nid); }); })(n.id);
+    el.appendChild(rmBtn);
     listaNota.appendChild(el);
   });
   btnAnalisar.disabled = notas.length === 0;
