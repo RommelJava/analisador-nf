@@ -89,16 +89,17 @@ tr:hover td{background:#13131a;}
   <div class="tab" id="t1" onclick="aba(1)">Resultados <span id="rc" style="display:none;background:#00e5a0;color:#000;border-radius:10px;font-size:9px;padding:1px 6px;margin-left:4px;font-weight:700;"></span></div>
 </div>
 <div class="pane on" id="p0">
+  <input type="file" id="fi" accept="image/*" multiple style="display:none">
   <div id="drop">
     <div style="font-size:48px;opacity:.4">&#x1F9FE;</div>
     <h2>Arraste as notas aqui</h2>
     <p>JPG, PNG, WEBP</p>
-    <button class="bverde" id="bsel">Selecionar arquivos</button>
+    <label for="fi" class="bverde" style="cursor:pointer;display:inline-block;padding:10px 28px;">Selecionar arquivos</label>
   </div>
   <div id="fila">
     <div id="fh">
       <h3 id="fcnt">0 notas</h3>
-      <button class="bsm" id="badd">+ Adicionar</button>
+      <label for="fi" class="bsm" style="cursor:pointer;">+ Adicionar</label>
       <button id="ban">&#9654; Analisar todas</button>
     </div>
     <div id="pw"><div id="po"><div id="pb"></div></div><div id="pt"></div></div>
@@ -137,7 +138,6 @@ tr:hover td{background:#13131a;}
     </div>
   </div>
 </div>
-<input type="file" id="fi" accept="image/*" multiple style="display:none">
 <script>
 var VK = "AIzaSyCXA7j449mZIjNSyCr_a0OJ0zLk3Q11jIk";
 var CK = ["sk-ant-api03-4r8g6O4dDF8Osk","7UTsz5CVwDgtY816v59K2qHGhZl","G0q9yDlAKmQtKu9uVOChef5kGXb","oOVSR3J7XVoAlYc8tQ-SjkwLQAA"].join("");
@@ -182,8 +182,6 @@ window.addEventListener("DOMContentLoaded", function() {
   var fila = document.getElementById("fila");
   var ban  = document.getElementById("ban");
 
-  document.getElementById("bsel").addEventListener("click", function(e){e.stopPropagation();fi.click();});
-  document.getElementById("badd").addEventListener("click", function(e){e.stopPropagation();fi.click();});
   fi.addEventListener("change", function(){if(fi.files&&fi.files.length){addFiles(fi.files);fi.value="";}});
   drop.addEventListener("dragover",  function(e){e.preventDefault();drop.classList.add("over");});
   drop.addEventListener("dragleave", function(){drop.classList.remove("over");});
