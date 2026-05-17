@@ -480,4 +480,144 @@ function selectRow(idx) {
     inspValor.textContent = fmtMoney(item.valor);
 
     viewerImg.onload = () => {
-      if (item.boxes && item.
+      if (item.boxes && item.boxes.valor) {
+        applyHighlight(item.boxes.valor, 'VALOR TOTAL', 'valor');
+      } else {
+        visualMarker.style.display = 'none';
+      }
+    };
+  }
+}
+window.selectRow = selectRow;
+
+document.querySelectorAll('.inspector-field').forEach(field => {
+  const target = field.getAttribute('data-target');
+  
+  field.addEventListener('mouseenter', () => {
+    const item = results[activeIndex];
+    if (item && item.boxes && item.boxes[target]) {
+      applyHighlight(item.boxes[target], target === 'valor' ? 'VALOR TOTAL' : target, target === 'valor' ? 'valor' : 'default');
+    }
+  });
+
+  field.addEventListener('mouseleave', () => {
+    const item = results[activeIndex];
+    if (item && item.boxes && item.boxes.valor) {
+      applyHighlight(item.boxes.valor, 'VALOR TOTAL', 'valor');
+    }
+  });
+});
+
+async function analyzeOneWithRetry(file, idx, retries = 3, delay = 4000) {
+  const ai = new GoogleGenerativeAI(EMBEDDED_API_KEY);
+  const model = ai.getGenerativeModel({ 
+    model: "gemini-2.5-flash",
+    generationConfig: { responseMimeType: "application/json" }
+  });
+
+  const compressedB64 = await getCompressedBase64(file);
+  const imagePart = { inlineData: { data: compressedB64, mimeType: "image/jpeg" } };
+  
+  const prompt = `Você é um scanner OCR de contabilidade altamente especializado em documentos do Brasil.
+  Analise a imagem fornecida e retorne rigorosamente o JSON estruturado conforme o exemplo abaixo:
+  {
+    "estabelecimento": "Nome legível do estabelecimento",
+    "tipo": "Classifique obrigatoriamente como: 'NFC-e', 'NF-e', 'RPS' ou 'Recibo'",
+    "numero": "Caso encontre um número identificador sequencial do documento formal (ex: 'Extrato Nº 219340'), extraia apenas os algarismos. Se for recibo simples manual sem número, use null",
+    "data": "Ache a data do documento. Se ler formatos como '07 de Maio de 2026', formate estritamente como '07/05/2026'",
+    "valor": número decimal correspondente ao preço total pago,
+    "boxes": {
+      "estabelecimento": [ymin, xmin, ymax, xmax],
+      "tipo": [ymin, xmin, ymax, xmax],
+      "numero": [ymin, xmin, ymax, xmax],
+      "data": [ymin, xmin, ymax, xmax],
+      "valor": [ymin, xmin, ymax, xmax]
+    }
+  }
+  Regras cruciais para mapeamento em "boxes":
+  - As caixas geométricas devem indicar a posição exata de cada campo mapeado usando a escala normatizada de 0 a 1000 da API de visão.
+  - Se um campo não existir ou for null, preencha o box correspondente dele como null.`;
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const result = await model.generateContent([prompt, imagePart]);
+      const response = await result.response;
+      let rawText = response.text().trim();
+      rawText = rawText.replace(/[\u0000-\u001F\u007F-\u009F]/g, ""); 
+      return JSON.parse(rawText);
+    } catch (e) {
+      console.warn(`Tentativa ${attempt} falhou para o índice ${idx}. Reexecutando...`);
+      if (attempt === retries) throw e; 
+      await new Promise(resolve => setTimeout(resolve, delay)); 
+    }
+  }
+}
+
+async function analyzeAll() {
+  btnAnalyze.disabled = true;
+  btnAnalyze.innerHTML = '<i class="ti ti-loader-2 spinner"></i> Analisando...';
+  progressWrap.style.display = 'block';
+  resultsBody.innerHTML = '';
+  results = [];
+
+  for (let i = 0; i < files.length; i++) {
+    const thumb = document.getElementById('thumb-' + i);
+    if (thumb) {
+      const s = thumb.querySelector('.status'); if (s) s.remove();
+      thumb.insertAdjacentHTML('beforeend', '<div class="status"><span class="spinner">⟳</span></div>');
+    }
+
+    progressBar.style.width = ((i / files.length) * 100) + '%';
+    
+    if (i > 0) {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
+
+    try {
+      const r = await analyzeOneWithRetry(files[i], i);
+      results.push({ ...r, _ok: true });
+      if (thumb) { thumb.querySelector('.status')?.remove(); thumb.insertAdjacentHTML('beforeend', '<div class="status">✅</div>'); }
+    } catch (err) {
+      console.error(`Falha no arquivo ${files[i].name}:`, err);
+      results.push({ estabelecimento: files[i].name, tipo: 'Erro', numero: null, data: null, valor: null, boxes: null, _ok: false });
+      if (thumb) { thumb.querySelector('.status')?.remove(); thumb.insertAdjacentHTML('beforeend', '<div class="status">❌</div>'); }
+    }
+
+    renderRow(i, results[i]);
+    updateTotal();
+    dashboard.style.display = 'grid';
+  }
+  
+  progressBar.style.width = '100%';
+  setTimeout(() => { progressWrap.style.display = 'none'; }, 600);
+  btnAnalyze.innerHTML = '<i class="ti ti-wand"></i> Analisar comprovantes';
+  btnAnalyze.disabled = false;
+  
+  if (results.length > 0) selectRow(0);
+}
+window.analyzeAll = analyzeAll;
+
+function renderRow(idx, r) {
+  const tc = r.tipo ? r.tipo.toLowerCase() : '';
+  const val = r.valor !== null ? `<span class="td-value">${fmtMoney(r.valor)}</span>` : '—';
+  const tr = document.createElement('tr');
+  tr.id = `row-${idx}`;
+  tr.innerHTML = `
+    <td>${idx + 1}</td>
+    <td><strong>${r.estabelecimento || '—'}</strong></td>
+    <td><span class="tag ${tc.includes('recibo')?'recibo':tc.includes('erro')?'erro':tc.includes('nfc')?'nfce':'nota'}">${r.tipo || '—'}</span></td>
+    <td>${val}</td>`;
+  
+  tr.addEventListener('click', () => selectRow(idx));
+  resultsBody.appendChild(tr);
+}
+
+function updateTotal() {
+  const total = results.reduce((s, r) => s + (document.getElementById(`row-${results.indexOf(r)}`)?.querySelector('.tag.erro') ? 0 : (Number(r.valor) || 0)), 0);
+  const fmt = fmtMoney(total);
+  totalValue.textContent = fmt;
+  totalBadge.textContent = fmt;
+}
+</script>
+</body>
+</html>
