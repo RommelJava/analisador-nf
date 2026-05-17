@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Analisador de Notas Vision Pro</title>
+  <title>Analisador de Notas & Recibos Vision Pro</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   
   <style>
@@ -143,7 +143,7 @@
     .dashboard { display: grid; grid-template-columns: 1fr; gap: 1.5rem; display: none; }
 
     @media (min-width: 900px) {
-      .dashboard { grid-template-columns: 1fr; }
+      .dashboard { grid-template-columns: 1.1fr 0.9fr; }
     }
 
     .panel {
@@ -166,7 +166,8 @@
 
     table { width: 100%; border-collapse: collapse; font-size: 12px; }
     thead th { text-align: left; padding: 8px; color: var(--color-text-secondary); border-bottom: 0.5px solid var(--color-border-primary); text-transform: uppercase; }
-    tbody tr { border-bottom: 0.5px solid var(--color-border-primary); transition: background 0.2s; }
+    tbody tr { border-bottom: 0.5px solid var(--color-border-primary); cursor: pointer; transition: background 0.2s; }
+    tbody tr:hover, tbody tr.selected { background: var(--color-background-primary); }
     tbody td { padding: 12px 8px; }
 
     .td-value { font-family: 'DM Mono', monospace; font-weight: 500; color: #1a1a2e; }
@@ -177,8 +178,41 @@
     .tag.nfce { background: #E1F5EE; color: #0F6E56; }
     .tag.erro { background: #f8d7da; color: #721c24; }
 
-    .footer-total { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 12px; border-top: 1px solid var(--color-border-primary); padding-top: 12px; }
+    .footer-total { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 12px; }
     .footer-total strong { font-family: 'DM Mono', monospace; font-size: 18px; }
+
+    .inspector-layout { display: flex; flex-direction: column; gap: 1rem; }
+
+    .inspector-card {
+      background: #fdfdfd;
+      border: 1px solid var(--color-border-primary);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .inspector-field {
+      margin-bottom: 0.8rem;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+    .inspector-field:hover { background: var(--color-background-tertiary); }
+
+    .inspector-label { font-size: 11px; text-transform: uppercase; color: var(--color-text-tertiary); font-weight: 600; margin-bottom: 2px; }
+    .inspector-value { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+    .inspector-value.money { font-family: 'DM Mono', monospace; font-size: 18px; color: #1a1a2e; font-weight: 600; }
+
+    .img-preview-container {
+      position: relative;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--color-border-secondary);
+      background: #fafafa;
+    }
+
+    .img-preview-container img { width: 100%; height: auto; display: block; }
 
     .spinner { animation: spin 1s linear infinite; display: inline-block; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -191,7 +225,7 @@
     <div class="header-icon"><i class="ti ti-receipt-2"></i></div>
     <div>
       <h1>Analisador de Notas & Recibos Vision Pro</h1>
-      <p>Extração estável via Gateway Direto HTTP do Gemini</p>
+      <p>Extração avançada de comprovantes via API Direta do Gemini</p>
     </div>
   </div>
 
@@ -224,8 +258,6 @@
             <th>#</th>
             <th>Estabelecimento</th>
             <th>Tipo</th>
-            <th>Número</th>
-            <th>Data</th>
             <th>Valor</th>
           </tr>
         </thead>
@@ -236,17 +268,52 @@
         <strong id="total-value">R$ 0,00</strong>
       </div>
     </div>
+
+    <div class="panel" style="display: flex; flex-direction: column; gap: 1rem;">
+      <h3 style="font-size: 14px;" id="viewer-title">Inspecionar Documento</h3>
+      
+      <div class="inspector-layout">
+        <div class="inspector-card">
+          <div class="inspector-field">
+            <div class="inspector-label">Estabelecimento Emissor</div>
+            <div class="inspector-value" id="insp-estabelecimento">—</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <div>
+              <div class="inspector-label">Tipo de Nota</div>
+              <div class="inspector-value" id="insp-tipo">—</div>
+            </div>
+            <div>
+              <div class="inspector-label">Número da Nota</div>
+              <div class="inspector-value" id="insp-numero" style="font-family:'DM Mono';">—</div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <div>
+              <div class="inspector-label">Data de Emissão</div>
+              <div class="inspector-value" id="insp-data">—</div>
+            </div>
+            <div>
+              <div class="inspector-label">Valor Total</div>
+              <div class="inspector-value money" id="insp-valor">R$ 0,00</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="img-preview-container" id="preview-container">
+          <img id="viewer-img" src="" alt="Preview do documento">
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-// =========================================================
-// MOTOR REST DIRETO DO GOOGLE GEMINI - SEM DEPENDÊNCIAS
-// =========================================================
 const GEMINI_API_KEY = "AIzaSyBl0VXSse2o3V7Y0resGTutqvEELeMPkKg"; 
 
 const files = [];
 let results = [];
+let activeIndex = 0;
 
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
@@ -258,6 +325,14 @@ const dashboard = document.getElementById('dashboard');
 const resultsBody = document.getElementById('results-body');
 const totalValue = document.getElementById('total-value');
 const totalBadge = document.getElementById('total-badge');
+
+const viewerImg = document.getElementById('viewer-img');
+const viewerTitle = document.getElementById('viewer-title');
+const inspEstabelecimento = document.getElementById('insp-estabelecimento');
+const inspTipo = document.getElementById('insp-tipo');
+const inspNumero = document.getElementById('insp-numero');
+const inspData = document.getElementById('insp-data');
+const inspValor = document.getElementById('insp-valor');
 
 dropZone.addEventListener('click', () => fileInput.click());
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
@@ -295,7 +370,6 @@ function removeFile(idx) {
   btnAnalyze.disabled = files.length === 0;
 }
 
-// Compressor nativo de alta eficiência para evitar estouro de timeout de tráfego
 function getCompressedBase64(file, maxWidth = 1000) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -331,6 +405,25 @@ function fmtMoney(v) {
   return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
+function selectRow(idx) {
+  activeIndex = idx;
+  document.querySelectorAll('#results-body tr').forEach(tr => tr.classList.remove('selected'));
+  const targetRow = document.getElementById(`row-${idx}`);
+  if (targetRow) targetRow.classList.add('selected');
+
+  const item = results[idx];
+  if (item) {
+    viewerTitle.textContent = `Inspecionando: ${item.estabelecimento || 'Documento ' + (idx + 1)}`;
+    viewerImg.src = URL.createObjectURL(files[idx]);
+    
+    inspEstabelecimento.textContent = item.estabelecimento || 'Não identificado';
+    inspTipo.textContent = item.tipo || 'Desconhecido';
+    inspNumero.textContent = item.numero ? item.numero : (item.tipo === 'Erro' ? '—' : 'Não possui');
+    inspData.textContent = item.data || 'Não encontrada';
+    inspValor.textContent = fmtMoney(item.valor);
+  }
+}
+
 async function analyzeOne(file, idx) {
   const thumb = document.getElementById('thumb-' + idx);
   if (thumb) {
@@ -341,15 +434,15 @@ async function analyzeOne(file, idx) {
   try {
     const b64 = await getCompressedBase64(file);
     
-    // Gateway HTTP estável sem travas de biblioteca externa
+    // ROTA DIRETA DA API DO GEMINI SEM DEPENDER DE IMPORTS QUE ADORAM QUEBRAR
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     
-    const prompt = `Você é um robô de contabilidade OCR para o Brasil. Analise a imagem fornecida e extraia obrigatoriamente um objeto JSON com os dados, sem texto adicional de introdução ou conclusão. Se um dado não existir ou for ilegível, use null.
+    const prompt = `Você é um robô de contabilidade OCR para o Brasil. Analise a imagem fornecida e extraia estritamente um objeto JSON com os dados estruturados conforme o formato abaixo. Retorne APENAS o JSON puro, sem markdown, sem blocos de código com três crases, sem texto explicativo adicional. Se um dado não existir, use null.
     {
       "estabelecimento": "Nome limpo do estabelecimento por extenso",
       "tipo": "Classifique apenas como: 'NFC-e', 'NF-e', 'RPS' ou 'Recibo'",
-      "numero": "Se houver número sequencial do documento fiscal formal como 'Extrato Nº 219340', extraia os algarismos. Se for recibo simples manual sem número, use null",
-      "data": "Data legível formatada restritamente como 'DD/MM/AAAA'",
+      "numero": "Se houver número sequencial do documento fiscal formal como 'Extrato Nº 219340', extraia apenas os algarismos. Se for recibo simples manual sem número, use null",
+      "data": "Data legível formatada estritamente como 'DD/MM/AAAA'",
       "valor": número decimal correspondente ao valor total pago pelo documento (ex: 21.00)"
     }`;
 
@@ -371,7 +464,7 @@ async function analyzeOne(file, idx) {
     const data = await resp.json();
     let text = data.candidates[0].content.parts[0].text.trim();
     
-    // Filtro contra marcações de marca d'água markdown do JSON
+    // Tratamento radical para limpar qualquer string de markdown caso o modelo insista
     text = text.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(text);
 
@@ -394,12 +487,11 @@ async function analyzeAll() {
   for (let i = 0; i < files.length; i++) {
     progressBar.style.width = ((i / files.length) * 100) + '%';
     
-    // Intervalo de segurança anti rate-limit
     if (i > 0) await new Promise(res => setTimeout(res, 2000));
     
     const r = await analyzeOne(files[i], i);
     results.push(r);
-    renderRow(i + 1, r);
+    renderRow(i, r);
     updateTotal();
     dashboard.style.display = 'grid';
   }
@@ -408,21 +500,24 @@ async function analyzeAll() {
   setTimeout(() => { progressWrap.style.display = 'none'; }, 600);
   btnAnalyze.innerHTML = '<i class="ti ti-wand"></i> Analisar comprovantes';
   btnAnalyze.disabled = false;
+  
+  if (results.length > 0) selectRow(0);
 }
 
-function renderRow(n, r) {
+function renderRow(idx, r) {
   const tc = r.tipo ? r.tipo.toLowerCase() : '';
   const val = r.valor !== null && !isNaN(r.valor) ? `<span class="td-value">${fmtMoney(r.valor)}</span>` : '—';
   const displayTag = tc.includes('recibo') ? 'recibo' : tc.includes('erro') ? 'erro' : tc.includes('nfc') ? 'nfce' : 'nota';
   
   const tr = document.createElement('tr');
+  tr.id = `row-${idx - 1}`;
   tr.innerHTML = `
-    <td>${n}</td>
+    <td>${idx}</td>
     <td><strong>${r.estabelecimento || '—'}</strong></td>
     <td><span class="tag ${displayTag}">${r.tipo || '—'}</span></td>
-    <td>${r.numero || 'Não possui'}</td>
-    <td>${r.data || '—'}</td>
     <td>${val}</td>`;
+  
+  tr.addEventListener('click', () => selectRow(idx - 1));
   resultsBody.appendChild(tr);
 }
 
