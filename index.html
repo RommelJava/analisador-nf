@@ -192,7 +192,7 @@
     <div class="header-icon"><i class="ti ti-receipt-2"></i></div>
     <div>
       <h1>Analisador de Notas & Recibos Vision Pro</h1>
-      <p>Extração avançada de comprovantes via API Anthropic Claude</p>
+      <p>Extração avançada de comprovantes via API</p>
     </div>
   </div>
 
@@ -242,9 +242,9 @@
 
 <script>
 // =========================================================
-// INSIRA A SUA CHAVE DA ANTHROPIC (CLAUDE) ATIVA AQUI
+// CHAVE DO GEMINI APLICADA NO MOTOR CORRETO DE ENVIO HTTP
 // =========================================================
-const ANTHROPIC_API_KEY = "SUA_CHAVE_DO_CLAUDE_AQUI"; 
+const GEMINI_API_KEY = "AIzaSyBl0VXSse2o3V7Y0resGTutqvEELeMPkKg"; 
 
 const files = [];
 let results = [];
@@ -296,7 +296,6 @@ function removeFile(idx) {
   btnAnalyze.disabled = files.length === 0;
 }
 
-// Compressor de canvas nativo para otimizar fotos de celular pesadas antes do tráfego de rede
 function getCompressedBase64(file, maxWidth = 1000) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -341,44 +340,40 @@ async function analyzeOne(file, idx) {
 
   try {
     const b64 = await getCompressedBase64(file);
-    const mime = 'image/jpeg';
-
-    const prompt = `Você é um extrator de dados de documentos fiscais brasileiros. Analise esta imagem de nota/recibo e extraia EXATAMENTE os seguintes campos em JSON puro (sem markdown, sem explicação):
+    
+    // Requisição HTTP limpa para o gateway estável do Gemini Pro
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    
+    const prompt = `Você é um scanner OCR fiscal brasileiro. Analise a imagem fornecida e retorne estritamente um objeto JSON com os dados extraídos, sem qualquer texto explicativo em volta:
     {
-      "estabelecimento": "nome do estabelecimento/emissor",
-      "tipo": "Recibo, NFC-e, NF-e ou RPS",
-      "numero": "Caso encontre um número sequencial formal de documento como 'Extrato Nº 219340', extraia os algarismos. Se for recibo simples manual sem número, use null",
-      "data": "data no formato DD/MM/AAAA",
-      "valor": número decimal total (ex: 35.00)
+      "estabelecimento": "Nome legível do emissor",
+      "tipo": "Classifique apenas como: 'NFC-e', 'NF-e', 'RPS' ou 'Recibo'",
+      "numero": "Caso encontre um número identificador sequencial do documento formal (ex: 'Extrato Nº 219340'), extraia apenas os algarismos. Se for recibo simples manual, use null",
+      "data": "Data formatada estritamente como 'DD/MM/AAAA'",
+      "valor": número decimal correspondente ao preço total pago
     }`;
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerously-allow-the-browser': 'true'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
-            { type: 'text', text: prompt }
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType: "image/jpeg", data: b64 } }
           ]
         }]
       })
     });
 
-    if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
+    if (!resp.ok) throw new Error(`Erro HTTP: ${resp.status}`);
 
     const data = await resp.json();
-    const text = data.content?.find(c => c.type === 'text')?.text || '{}';
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
+    let text = data.candidates[0].content.parts[0].text.trim();
+    
+    // Limpeza de marcações markdown ```json que a IA costuma colocar
+    text = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(text);
 
     if (thumb) { thumb.querySelector('.status')?.remove(); thumb.insertAdjacentHTML('beforeend', '<div class="status">✅</div>'); }
     return { ...parsed, _ok: true };
@@ -399,8 +394,8 @@ async function analyzeAll() {
   for (let i = 0; i < files.length; i++) {
     progressBar.style.width = ((i / files.length) * 100) + '%';
     
-    // Pequena pausa de rede estável
-    if (i > 0) await new Promise(res => setTimeout(res, 1500));
+    // Pequeno delay para acalmar as requisições consecutivas
+    if (i > 0) await new Promise(res => setTimeout(res, 2000));
     
     const r = await analyzeOne(files[i], i);
     results.push(r);
