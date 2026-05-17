@@ -367,7 +367,7 @@ const inspValor = document.getElementById('insp-valor');
 const visualMarker = document.getElementById('visual-marker');
 const markerLabel = document.getElementById('marker-label');
 
-// Eventos de clique e arrastar isolados corretamente
+// Eventos de clique corrigidos
 dropZone.addEventListener('click', () => fileInput.click());
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
