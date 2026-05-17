@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Analisador de Notas Vision Pro Final — Google Gemini</title>
+  <title>Analisador de Notas Vision Pro — Google Gemini</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   
   <style>
@@ -251,15 +251,15 @@
   <div class="header">
     <div class="header-icon"><i class="ti ti-receipt-2"></i></div>
     <div>
-      <h1>Analisador de Notas & Recibos Vision Pro Estabilizado</h1>
+      <h1>Analisador de Notas & Recibos Vision Pro</h1>
       <p>Processamento otimizado local contra gargalos de rede e estouros de limite</p>
     </div>
   </div>
 
-  <div class="drop-zone" id="drop-zone">
+  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
     <i class="ti ti-photo-up"></i>
-    <div class="drop-title">Arraste as fotos das notas ou comprovantes aqui</div>
-    <button class="btn-upload" onclick="document.getElementById('file-input').click()">Selecionar imagens</button>
+    <div class="drop-title">Arraste as fotos das notas ou clique para selecionar</div>
+    <button class="btn-upload">Selecionar imagens</button>
     <input type="file" id="file-input" accept="image/*" multiple>
   </div>
 
@@ -341,9 +341,6 @@
 <script type="module">
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// ==========================================
-// 🔴 NOVA CHAVE DE API ATUALIZADA COM SUCESSO
-// ==========================================
 const EMBEDDED_API_KEY = "AIzaSyBl0VXSse2o3V7Y0resGTutqvEELeMPkKg"; 
 
 const files = [];
@@ -373,8 +370,8 @@ const markerLabel = document.getElementById('marker-label');
 
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); addFiles([...e.dataTransfer.files]); });
-fileInput.addEventListener('change', () => addFiles([...fileInput.files]));
+dropZone.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('drag-over'); addFiles([...e.dataTransfer.files]); });
+fileInput.addEventListener('change', e => { addFiles([...fileInput.files]); });
 
 function addFiles(newFiles) {
   newFiles.filter(f => f.type.startsWith('image/')).forEach(f => {
@@ -402,7 +399,6 @@ function removeFile(idx) {
   btnAnalyze.disabled = files.length === 0;
 }
 
-// Compressor de imagens locais para aliviar o buffer de upload Wi-Fi
 function getCompressedBase64(file, maxWidth = 1000) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
