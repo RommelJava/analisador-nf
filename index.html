@@ -190,8 +190,8 @@
       padding: 1rem;
     }
 
-    .inspector-label { font-size: 11px; text-transform: uppercase; color: var(--text-tertiary); font-weight: 600; margin-bottom: 2px; }
-    .inspector-value { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+    .inspector-label { font-size: 11px; text-transform: uppercase; color: var(--color-text-tertiary); font-weight: 600; margin-bottom: 2px; }
+    .inspector-value { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
     .inspector-value.money { font-family: 'DM Mono', monospace; font-size: 18px; color: #1a1a2e; font-weight: 600; }
 
     .img-preview-container {
@@ -425,16 +425,15 @@ async function analyzeOne(file, idx) {
     const b64 = await getCompressedBase64(file);
     const url = "https://openrouter.ai/api/v1/chat/completions";
     
-    const prompt = `Você é um robô de contabilidade OCR para o Brasil. Analise a imagem fornecida e extraia um objeto JSON com os dados estruturados conforme o formato abaixo. Retorne APENAS o JSON puro, sem markdown, sem blocos de código com três crases, sem texto explicativo adicional. Se um dado não existir, use null.
+    const prompt = `Você é um scanner OCR fiscal experiente no Brasil. Analise a imagem e monte um JSON puríssimo. Não use markdown, não coloque as três crases (\`\`\`), retorne apenas as chaves e valores cruas:
     {
-      "estabelecimento": "Nome limpo do estabelecimento por extenso",
-      "tipo": "Classifique apenas como: 'NFC-e', 'NF-e', 'RPS' ou 'Recibo'",
-      "numero": "Se houver número sequencial do documento fiscal formal, extraia apenas os algarismos. Se for recibo simples manual sem número, use null",
-      "data": "Data legível formatada estritamente como 'DD/MM/AAAA'",
-      "valor": número decimal correspondente ao valor total pago pelo documento (ex: 21.00)"
+      "estabelecimento": "Nome limpo do emissor",
+      "tipo": "Recibo, NFC-e, NF-e ou RPS",
+      "numero": "Apenas os algarismos do número sequencial ou null",
+      "data": "DD/MM/AAAA",
+      "valor": número decimal total pago
     }`;
 
-    // 🔴 AJUSTE ESSENCIAL DE PAYLOAD EXIGIDO PELO OPENROUTER PARA ENVIAR IMAGENS CORRETAMENTE:
     const resp = await fetch(url, {
       method: 'POST',
       headers: { 
@@ -447,12 +446,7 @@ async function analyzeOne(file, idx) {
           role: "user",
           content: [
             { type: "text", text: prompt },
-            { 
-              type: "image_url", 
-              image_url: { 
-                url: `data:image/jpeg;base64,${b64}` 
-              } 
-            }
+            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${b64}` } }
           ]
         }]
       })
@@ -463,7 +457,16 @@ async function analyzeOne(file, idx) {
     const data = await resp.json();
     let text = data.choices[0].message.content.trim();
     
+    // Filtro cirúrgico para arrancar qualquer texto extra ou blocos de código
     text = text.replace(/```json|```/g, '').trim();
+    
+    // Proteção extra se a IA teimar em mandar introduções por texto antes do colchete
+    const startIdx = text.indexOf('{');
+    const endIdx = text.lastIndexOf('}');
+    if (startIdx !== -1 && endIdx !== -1) {
+        text = text.substring(startIdx, endIdx + 1);
+    }
+
     const parsed = JSON.parse(text);
 
     if (thumb) { thumb.querySelector('.status')?.remove(); thumb.insertAdjacentHTML('beforeend', '<div class="status">✅</div>'); }
